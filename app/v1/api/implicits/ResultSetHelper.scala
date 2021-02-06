@@ -6,9 +6,9 @@ import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
 import v1.api.entity.{Article, Category, SerialNumber, Tag}
 
-import java.sql.{PreparedStatement, ResultSet}
+import java.sql.{Connection, Date, PreparedStatement, ResultSet}
 
-object ResultSetUtil {
+object ResultSetHelper {
 
   implicit class ResultSet2LazyList(resultSet: ResultSet) {
     def toLazyList: LazyList[ResultSet] = {
@@ -32,13 +32,14 @@ object ResultSetUtil {
   }
 
   implicit class PreparedStatementHelper(ps: PreparedStatement) {
-    def getGeneratedID: Int = {
-      val rs = ps.getGeneratedKeys
-      var id: Int = 0
-      while (rs.next()) {
-        id = rs.getInt(1)
-      }
-      id
+    def getGeneratedIDs: List[Int] = {
+      ps.getGeneratedKeys
+        .toLazyList
+        .map {
+          rs =>
+            rs.getInt(1)
+        }
+        .toList
     }
   }
 
@@ -52,7 +53,9 @@ object ArticleResultSet {
       resultSet.getString(author),
       resultSet.getDate(publishTime),
       resultSet.getString(content),
-      resultSet.getDate(createTime)
+      resultSet.getDate(createTime),
+      null,
+      null
     )
   }
 }
@@ -68,6 +71,38 @@ object TagResultSet {
   def map2Tag(implicit resultSet: ResultSet): Tag = {
     Tag(SerialNumber(resultSet.getInt(id)), resultSet.getString(tag))
   }
+}
+
+object ConnectionUtil {
+
+  implicit class PreparedSql(conn: Connection) {
+    def preparedSql(sql: String, statementOption: Int*): PreparedStatement = {
+      statementOption.map {
+        id =>
+          conn.prepareStatement(sql, id)
+      }
+      conn.prepareStatement(sql)
+    }
+  }
+
+  implicit class Params(ps: PreparedStatement) {
+    def setParams(params: Any*): PreparedStatement = {
+      for (index <- params.indices) {
+        val value = params(index)
+        val columnIndex = index + 1
+        value match {
+          case _: Int => ps.setInt(columnIndex, value.asInstanceOf[Int])
+          case _: Long => ps.setLong(columnIndex, value.asInstanceOf[Long])
+          case _: String => ps.setString(columnIndex, value.asInstanceOf[String])
+          case _: Date => ps.setDate(columnIndex, value.asInstanceOf[Date])
+          case _: java.util.Date => ps.setDate(columnIndex, new Date(value.asInstanceOf[java.util.Date].getTime))
+          case _ =>
+        }
+      }
+      ps
+    }
+  }
+
 }
 
 

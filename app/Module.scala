@@ -16,5 +16,7 @@ class Module(environment: Environment, configuration: Configuration)
     bind[ArticleRepository].to[ArticleRepositoryImpl]
     bind[CategoryRepository].to[CategoryRepositoryImpl]
     bind[TagRepository].to[TagRepositoryImpl]
+    bind[ArticleCategoryRepository].to[ArticleCategoryRepositoryImpl]
+    bind[ArticleTagRepository].to[ArticleTagRepositoryImpl]
   }
 }

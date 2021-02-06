@@ -29,7 +29,9 @@ object Entities {
     val id = "id"
   }
 
+
   object ArticleField {
+    val table = "Article"
 
     val title = "title"
 

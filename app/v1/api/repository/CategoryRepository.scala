@@ -6,7 +6,8 @@ import play.db.NamedDatabase
 import v1.api.entity.Category
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.CategoryResultSet._
-import v1.api.implicits.ResultSetUtil._
+import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.ResultSetHelper._
 
 import java.sql.Statement
 import scala.concurrent.Future
@@ -27,7 +28,8 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
     Future {
       database.withConnection {
         conn =>
-          conn.prepareStatement(Category.sql_select_by_id(id))
+          conn.preparedSql("select * from category where id=?")
+            .setParams(id)
             .executeQuery()
             .toLazyList
             .map(map2Category(_))
@@ -40,8 +42,10 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
     Future {
       database.withConnection {
         conn =>
-          val ps = conn.prepareStatement(Category.sql_insert(category), Statement.RETURN_GENERATED_KEYS)
-          ps.getGeneratedID
+          val ps = conn.preparedSql("insert into category(category) values(?)", Statement.RETURN_GENERATED_KEYS)
+            .setParams(category.category)
+          ps.executeQuery()
+          ps.getGeneratedIDs.head
       }
     }
   }
@@ -50,11 +54,14 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
     Future {
       database.withConnection {
         conn =>
-          val st = conn.createStatement()
+          val ps = conn.preparedSql("insert into category(category) values (?)", Statement.RETURN_GENERATED_KEYS)
           category.foreach {
-            c => st.addBatch(Category.sql_insert(c))
+            c =>
+              ps.setParams(c.category)
+                .addBatch()
           }
-          st.executeBatch().toSeq
+          ps.executeBatch()
+          ps.getGeneratedIDs
       }
     }
   }

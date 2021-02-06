@@ -1,67 +1,20 @@
 package v1.api.entity
 
-import play.api.Logger
 import v1.api.cont.Entities._
 
 import java.sql.Date
 
-trait SqlStatement[T] {
-  val log: Logger = Logger(getClass)
+case class Article(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag])
 
-  def sql_select_by_id(id: Int): String = {
-    sql_select_all + s" where id=$id "
-  }
-
-  def sql_count: String = {
-    s"select count(*) from $table"
-  }
-
-  def sql_select_limit(offset: Int, size: Int): String = {
-    val safeOffset = Math.max(1, offset)
-    val safeSize = Math.min(10, size)
-    sql_select_all + s" limit ${safeOffset - 1},$safeSize"
-  }
-
-  def sql_select_all: String = {
-    s"select * from $table"
-  }
-
-  def sql_insert(tType: T): String = {
-    val insertSql = s"insert into $table "
-    val names = new StringBuilder
-    val values = new StringBuilder
-    names.append("(")
-    values.append("(")
-    val map = tType.getClass.getDeclaredFields
-      .filterNot(f => f.getName.toLowerCase.matches(".*serial.*"))
-      .map { f =>
-        f.setAccessible(true)
-        Map(f.getName -> f.get(tType))
-      }
-      .reduce((a, b) => a ++ b)
-    names.append(map.keys.mkString(",")).append(")")
-    values.append("'").append(map.values.mkString("','")).append("')")
-    val statement = insertSql + names + " values " + values
-    log.debug(s"insert statement ===> $statement")
-    statement
-  }
-
-  def table: String = "[A-Za-z]".r().findAllIn(getClass.getSimpleName).mkString("")
-
-}
-
-
-case class Article(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date)
-
-object Article extends SqlStatement[Article] {}
 
 case class Category(serialNumber: SerialNumber, category: String)
 
-object Category extends SqlStatement[Category] {}
-
 case class Tag(serialNumber: SerialNumber, tag: String)
 
-object Tag extends SqlStatement[Tag] {}
+case class ArticleCategoryRel(articleId: Int, categoryId: Int)
+
+case class ArticleTagRel(articleId: Int, tagId: Int)
+
 
 case class ArticleForm(title: String, author: String, publishTime: java.util.Date, content: String, category: Seq[Category], tag: Seq[Tag]) {
   def getArticle: Article = {
@@ -71,7 +24,10 @@ case class ArticleForm(title: String, author: String, publishTime: java.util.Dat
       author,
       new Date(publishTime.getTime),
       content,
-      new Date(System.currentTimeMillis()))
+      new Date(System.currentTimeMillis()),
+      category,
+      tag
+    )
   }
 }
 

@@ -6,7 +6,8 @@ import play.db.NamedDatabase
 import v1.api.entity.Article
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ArticleResultSet._
-import v1.api.implicits.ResultSetUtil._
+import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.ResultSetHelper._
 import v1.api.page.Page
 
 import java.sql.Statement
@@ -20,21 +21,28 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def select(id: Int): Future[Option[Article]] = {
     Future {
       database.withConnection(conn => {
-        conn.createStatement()
-          .executeQuery(Article.sql_select_by_id(id))
-          .toLazyList.map(map2Article(_))
+        conn.preparedSql("select * from Article where id=?")
+          .setParams(id)
+          .executeQuery()
+          .toLazyList
+          .map(map2Article(_))
           .headOption
       })
     }
   }
 
 
-  override def insert(article: Article): Future[Int] = {
+  override def insertOne(article: Article): Future[Int] = {
     Future {
-      database.withConnection(implicit connection => {
-        val ps = connection.prepareStatement(Article.sql_insert(article), Statement.RETURN_GENERATED_KEYS)
+      database.withConnection(conn => {
+        val ps = conn.preparedSql("insert into Article(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)
+          .setParams(article.title,
+            article.author,
+            article.publishTime,
+            article.content,
+            article.createTime)
         ps.executeUpdate()
-        ps.getGeneratedID
+        ps.getGeneratedIDs.head
       })
     }
   }
@@ -42,14 +50,17 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def list(page: Int, size: Int): Future[Page[Article]] = {
     Future {
       database.withConnection(conn => {
-        val total: Long = conn.createStatement()
-          .executeQuery(Article.sql_count)
+        val total: Long = conn.preparedSql("select count(*) from Article")
+          .executeQuery()
           .getRowCount
-        val items = conn.prepareStatement(Article.sql_select_limit(page, size))
+        val maxSize = Math.min(10, size)
+        val offset = (Math.max(1, page) - 1) * maxSize
+        val items = conn.preparedSql("select * from Article limit ?,?")
+          .setParams(offset, maxSize)
           .executeQuery()
           .toLazyList.map(map2Article(_))
           .toList
-        Page(items, page, size, total)
+        Page(items, page, maxSize, total)
       })
     }
   }
@@ -62,5 +73,5 @@ trait ArticleRepository {
 
   //def search(key: String): Future[Option[List[Article]]]
 
-  def insert(article: Article): Future[Int]
+  def insertOne(article: Article): Future[Int]
 }

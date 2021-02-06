@@ -5,15 +5,17 @@ import play.api.db.Database
 import play.db.NamedDatabase
 import v1.api.entity.Tag
 import v1.api.execute.DataBaseExecuteContext
-import v1.api.implicits.ResultSetUtil._
+import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.ResultSetHelper._
 import v1.api.implicits.TagResultSet._
 
+import java.sql.Statement
 import scala.concurrent.Future
 
 trait TagRepository {
   def getById(id: Int): Future[Option[Tag]]
 
-  def insert(tag: Tag): Future[Int]
+  def insertOne(tag: Tag): Future[Int]
 
   def batchInsert(tag: Seq[Tag]): Future[Seq[Int]]
 }
@@ -24,7 +26,8 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     Future {
       database.withConnection {
         conn =>
-          conn.prepareStatement(Tag.sql_select_by_id(id))
+          conn.preparedSql("select * from tag where id=?")
+            .setParams(id)
             .executeQuery()
             .toLazyList
             .map(map2Tag(_))
@@ -33,12 +36,14 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     }
   }
 
-  override def insert(tag: Tag): Future[Int] = {
+  override def insertOne(tag: Tag): Future[Int] = {
     Future {
       database.withConnection {
         conn =>
-          val ps = conn.prepareStatement(Tag.sql_insert(tag))
-          ps.getGeneratedID
+          val ps = conn.preparedSql("insert into tag(tag) values(?)")
+            .setParams(tag.tag)
+          ps.executeQuery()
+          ps.getGeneratedIDs.head
       }
     }
   }
@@ -47,12 +52,13 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     Future {
       database.withConnection {
         conn =>
-          val st = conn.createStatement()
+          val ps = conn.preparedSql("insert into tag(tag) values(?)", Statement.RETURN_GENERATED_KEYS)
           tag.foreach {
             t =>
-              st.addBatch(Tag.sql_insert(t))
+              ps.setParams(t.tag).addBatch()
           }
-          st.executeBatch().toSeq
+          ps.executeBatch()
+          ps.getGeneratedIDs
       }
     }
   }
