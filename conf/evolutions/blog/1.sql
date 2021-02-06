@@ -10,5 +10,19 @@ CREATE TABLE `article`
     `createTime`  DATETIME     NOT NULL COMMENT '创建时间',
     PRIMARY KEY (`id`)
 );
+CREATE TABLE `Category`
+(
+    `id`       INT          NOT NULL AUTO_INCREMENT,
+    `category` VARCHAR(128) NOT NULL,
+    KEY        `category_index` (`category`) USING BTREE,
+    PRIMARY KEY (`id`)
+);
+CREATE TABLE `Tag`
+(
+    `id`  INT          NOT NULL AUTO_INCREMENT,
+    `tag` VARCHAR(128) NOT NULL,
+    KEY   `tag_index` (`tag`) USING BTREE,
+    PRIMARY KEY (`id`)
+);
 -- !Downs
 DROP TABLE `article`;

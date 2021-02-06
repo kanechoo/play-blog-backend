@@ -1,9 +1,10 @@
 package v1.api.implicits
 
+import v1.api.cont.Entities.ArticleField._
 import v1.api.cont.Entities.CategoryField._
 import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
-import v1.api.entity.{Category, SerialNumber, Tag}
+import v1.api.entity.{Article, Category, SerialNumber, Tag}
 
 import java.sql.{PreparedStatement, ResultSet}
 
@@ -41,6 +42,19 @@ object ResultSetUtil {
     }
   }
 
+}
+
+object ArticleResultSet {
+  def map2Article(implicit resultSet: ResultSet): Article = {
+    Article(
+      SerialNumber(resultSet.getInt(id)),
+      resultSet.getString(title),
+      resultSet.getString(author),
+      resultSet.getDate(publishTime),
+      resultSet.getString(content),
+      resultSet.getDate(createTime)
+    )
+  }
 }
 
 object CategoryResultSet {

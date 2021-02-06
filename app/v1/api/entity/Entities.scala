@@ -1,15 +1,12 @@
 package v1.api.entity
 
-import v1.api.cont.Entities.ArticleField._
-import v1.api.cont.Entities.CategoryField._
-import v1.api.cont.Entities.CommonField._
-import v1.api.cont.Entities.TagField._
+import play.api.Logger
 import v1.api.cont.Entities._
 
-import java.sql.{Date, ResultSet}
+import java.sql.Date
 
-trait EntityTable[T] {
-  def map2Entity(resultSet: ResultSet): T
+trait SqlStatement[T] {
+  val log: Logger = Logger(getClass)
 
   def sql_select_by_id(id: Int): String = {
     sql_select_all + s" where id=$id "
@@ -20,14 +17,14 @@ trait EntityTable[T] {
   }
 
   def sql_select_limit(offset: Int, size: Int): String = {
-    sql_select_all + s" limit ${offset - 1},$size"
+    val safeOffset = Math.max(1, offset)
+    val safeSize = Math.min(10, size)
+    sql_select_all + s" limit ${safeOffset - 1},$safeSize"
   }
 
   def sql_select_all: String = {
     s"select * from $table"
   }
-
-  def table: String = "[A-Za-z]".r().findAllIn(getClass.getSimpleName).mkString("")
 
   def sql_insert(tType: T): String = {
     val insertSql = s"insert into $table "
@@ -44,19 +41,39 @@ trait EntityTable[T] {
       .reduce((a, b) => a ++ b)
     names.append(map.keys.mkString(",")).append(")")
     values.append("'").append(map.values.mkString("','")).append("')")
-    insertSql + names + " values " + values
+    val statement = insertSql + names + " values " + values
+    log.debug(s"insert statement ===> $statement")
+    statement
   }
+
+  def table: String = "[A-Za-z]".r().findAllIn(getClass.getSimpleName).mkString("")
 
 }
 
 
 case class Article(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date)
 
+object Article extends SqlStatement[Article] {}
+
 case class Category(serialNumber: SerialNumber, category: String)
+
+object Category extends SqlStatement[Category] {}
 
 case class Tag(serialNumber: SerialNumber, tag: String)
 
-case class ArticleForm(title: String, author: String, publishTime: java.util.Date, content: String, category: Seq[Category], tag: Seq[Tag])
+object Tag extends SqlStatement[Tag] {}
+
+case class ArticleForm(title: String, author: String, publishTime: java.util.Date, content: String, category: Seq[Category], tag: Seq[Tag]) {
+  def getArticle: Article = {
+    Article(
+      SerialNumber(0),
+      title,
+      author,
+      new Date(publishTime.getTime),
+      content,
+      new Date(System.currentTimeMillis()))
+  }
+}
 
 object ArticleForm {
   def customApply(title: String, author: String, publishTime: java.util.Date, content: String, category: String, tag: String): ArticleForm = apply(title, author, publishTime, content, fmtCategory(category), fmtTag(tag))
@@ -96,6 +113,8 @@ object ArticleForm {
         categoryToString(articleForm.category),
         tagToString(articleForm.tag))
     }
+
+
   }
 
   def categoryToString(category: Seq[Category]): String = {
@@ -110,34 +129,6 @@ object ArticleForm {
     else {
       tag.map(t => t.tag).mkString(tagSplitSymbol)
     }
-  }
-}
-
-
-object Article extends EntityTable[Article] {
-  override def map2Entity(resultSet: ResultSet): Article = {
-    Article(
-      SerialNumber(resultSet.getInt(id)),
-      resultSet.getString(title),
-      resultSet.getString(author),
-      resultSet.getDate(publishTime),
-      resultSet.getString(content),
-      resultSet.getDate(createTime)
-    )
-  }
-
-}
-
-object Category extends EntityTable[Category] {
-  override def map2Entity(resultSet: ResultSet): Category = {
-    Category(SerialNumber(resultSet.getInt(id)), resultSet.getString(category))
-  }
-
-}
-
-object Tag extends EntityTable[Tag] {
-  override def map2Entity(resultSet: ResultSet): Tag = {
-    Tag(SerialNumber(resultSet.getInt(id)), resultSet.getString(tag))
   }
 }
 

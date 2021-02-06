@@ -5,7 +5,7 @@ import play.api.data.Form
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArticleBaseController, ArticleControllerComponents, ArticleRequest}
-import v1.api.cont.ConstVal._
+import v1.api.cont.Const._
 import v1.api.entity.ArticleForm
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +35,6 @@ class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec:
           }
         },
         (articleForm: ArticleForm) => {
-          println(articleForm)
           ArticleHandler.createArticle(articleForm)
             .map {
               article =>

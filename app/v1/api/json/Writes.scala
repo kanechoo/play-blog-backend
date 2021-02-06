@@ -1,7 +1,7 @@
 package v1.api.json
 
 import play.api.libs.json._
-import v1.api.cont.ConstVal._
+import v1.api.cont.Page._
 import v1.api.entity.SerialNumber
 import v1.api.page.Page
 

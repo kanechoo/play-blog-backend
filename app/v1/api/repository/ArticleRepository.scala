@@ -5,6 +5,7 @@ import play.api.db.Database
 import play.db.NamedDatabase
 import v1.api.entity.Article
 import v1.api.execute.DataBaseExecuteContext
+import v1.api.implicits.ArticleResultSet._
 import v1.api.implicits.ResultSetUtil._
 import v1.api.page.Page
 
@@ -21,10 +22,10 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
       database.withConnection(conn => {
         conn.createStatement()
           .executeQuery(Article.sql_select_by_id(id))
-          .toLazyList.map(x => Article.map2Entity(x))
+          .toLazyList.map(map2Article(_))
           .headOption
       })
-    }(dataBaseExecuteContext)
+    }
   }
 
 
@@ -35,18 +36,22 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
         ps.executeUpdate()
         ps.getGeneratedID
       })
-    }(dataBaseExecuteContext)
+    }
   }
 
   override def list(page: Int, size: Int): Future[Page[Article]] = {
     Future {
       database.withConnection(conn => {
-        val total: Long = conn.createStatement().executeQuery(Article.sql_count).getRowCount
+        val total: Long = conn.createStatement()
+          .executeQuery(Article.sql_count)
+          .getRowCount
         val items = conn.prepareStatement(Article.sql_select_limit(page, size))
-          .executeQuery().toLazyList.map { resultSet => Article.map2Entity(resultSet) }.toList
+          .executeQuery()
+          .toLazyList.map(map2Article(_))
+          .toList
         Page(items, page, size, total)
       })
-    }(dataBaseExecuteContext)
+    }
   }
 }
 

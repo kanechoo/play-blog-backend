@@ -3,18 +3,21 @@ package v1.api.cont
 import v1.api.entity.Article
 import v1.api.json.{PageProductWrites, ProductWrites}
 
-object ConstVal {
+object Const {
 
   implicit val defaultJsonWrites: ProductWrites[Article] = new ProductWrites[Article]
   implicit val pageDefaultJsonWrites: PageProductWrites[Article] = new PageProductWrites[Article]
+}
 
-  def page = "page"
+object Page {
 
-  def size = "size"
+  val page = "page"
 
-  def total = "total"
+  val size = "size"
 
-  def data = "data"
+  val total = "total"
+
+  val data = "data"
 }
 
 object Entities {

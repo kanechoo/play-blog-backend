@@ -21,6 +21,8 @@ trait CategoryRepository {
 
 @Singleton
 class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(implicit dataBaseExecuteContext: DataBaseExecuteContext) extends CategoryRepository {
+
+
   override def getById(id: Int): Future[Option[Category]] = {
     Future {
       database.withConnection {
