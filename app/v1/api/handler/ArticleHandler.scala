@@ -1,15 +1,20 @@
 package v1.api.handler
 
 import com.google.inject.Inject
-import v1.api.controller.ArticleForm
-import v1.api.entity.{Article, SerialNumber}
+import play.api.Logger
+import v1.api.entity.{Article, ArticleForm, SerialNumber}
 import v1.api.page.Page
-import v1.api.repository.ArticleRepository
+import v1.api.repository.{ArticleRepository, CategoryRepository, TagRepository}
 
 import java.sql.Date
 import scala.concurrent.{ExecutionContext, Future}
 
-class ArticleHandler @Inject()(repository: ArticleRepository)(implicit ec: ExecutionContext) {
+class ArticleHandler @Inject()(articleRepository: ArticleRepository,
+                               categoryRepository: CategoryRepository,
+                               tagRepository: TagRepository)
+                              (implicit ec: ExecutionContext) {
+  val log: Logger = Logger(getClass)
+
   def createArticle(articleForm: ArticleForm): Future[Article] = {
     val article = Article(
       SerialNumber(0),
@@ -18,20 +23,22 @@ class ArticleHandler @Inject()(repository: ArticleRepository)(implicit ec: Execu
       new Date(articleForm.publishTime.getTime),
       articleForm.content,
       new Date(System.currentTimeMillis()))
-    repository.insert(article)
+    articleRepository.insert(article)
       .map(id => {
+        log.trace(s"inserted article id:$id")
+
         article
       })
   }
 
   def selectById(id: Int): Future[Option[Article]] = {
-    repository.select(id)
+    articleRepository.select(id)
       .map { article =>
         article
       }
   }
 
-  def selectArticle(page: Int, size: Int): Future[Page[Article]] = repository.list(page, size).map {
+  def selectArticle(page: Int, size: Int): Future[Page[Article]] = articleRepository.list(page, size).map {
     result =>
       result
   }

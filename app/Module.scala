@@ -1,7 +1,7 @@
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.ScalaModule
 import play.api.{Configuration, Environment}
-import v1.api.repository.{ArticleRepository, ArticleRepositoryImpl}
+import v1.api.repository._
 
 /**
   * Sets up custom components for Play.
@@ -14,5 +14,7 @@ class Module(environment: Environment, configuration: Configuration)
 
   override def configure(): Unit = {
     bind[ArticleRepository].to[ArticleRepositoryImpl]
+    bind[CategoryRepository].to[CategoryRepositoryImpl]
+    bind[TagRepository].to[TagRepositoryImpl]
   }
 }

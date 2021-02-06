@@ -1,11 +1,11 @@
 package v1.api.router
 
+import com.google.inject.Inject
 import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
 import v1.api.controller.ArticleController
 
-import javax.inject.Inject
 
 class ArticleRouter @Inject()(ac: ArticleController) extends SimpleRouter {
   val linkPrefix = "/v1/api/"
@@ -21,9 +21,12 @@ class ArticleRouter @Inject()(ac: ArticleController) extends SimpleRouter {
   override def routes: Routes = {
     case POST(p"/") =>
       ac.createNewArticle
-    case GET(q"page=$page" & q"size=$size") =>
+    case GET(p"/") & (q"page=$page" & q"size=$size") =>
       ac.queryArticle(page.toInt, size.toInt)
     case GET(p"/$id") =>
       ac.findById(Integer.parseInt(id))
+    case POST(p"/test") =>
+      println("success")
+      ac.postArticle
   }
 }

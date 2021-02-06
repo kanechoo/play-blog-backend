@@ -5,9 +5,10 @@ import play.api.db.Database
 import play.db.NamedDatabase
 import v1.api.entity.Article
 import v1.api.execute.DataBaseExecuteContext
-import v1.api.implicits.ResultSetHelper._
+import v1.api.implicits.ResultSetUtil._
 import v1.api.page.Page
 
+import java.sql.Statement
 import scala.concurrent.Future
 
 @Singleton
@@ -20,7 +21,7 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
       database.withConnection(conn => {
         conn.createStatement()
           .executeQuery(Article.sql_select_by_id(id))
-          .toLazyList.map(x => Article.mapping(x))
+          .toLazyList.map(x => Article.map2Entity(x))
           .headOption
       })
     }(dataBaseExecuteContext)
@@ -30,7 +31,9 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def insert(article: Article): Future[Int] = {
     Future {
       database.withConnection(implicit connection => {
-        connection.createStatement().executeUpdate(Article.sql_insert(article))
+        val ps = connection.prepareStatement(Article.sql_insert(article), Statement.RETURN_GENERATED_KEYS)
+        ps.executeUpdate()
+        ps.getGeneratedID
       })
     }(dataBaseExecuteContext)
   }
@@ -40,7 +43,7 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
       database.withConnection(conn => {
         val total: Long = conn.createStatement().executeQuery(Article.sql_count).getRowCount
         val items = conn.prepareStatement(Article.sql_select_limit(page, size))
-          .executeQuery().toLazyList.map { resultSet => Article.mapping(resultSet) }.toList
+          .executeQuery().toLazyList.map { resultSet => Article.map2Entity(resultSet) }.toList
         Page(items, page, size, total)
       })
     }(dataBaseExecuteContext)

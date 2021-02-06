@@ -16,3 +16,35 @@ object ConstVal {
 
   def data = "data"
 }
+
+object Entities {
+  val categorySplitSymbol = "#"
+
+  val tagSplitSymbol = "#"
+
+  object CommonField {
+    val id = "id"
+  }
+
+  object ArticleField {
+
+    val title = "title"
+
+    val author = "author"
+
+    val publishTime = "publishTime"
+
+    val content = "content"
+
+    val createTime = "createTime"
+  }
+
+  object CategoryField {
+    val category = "category"
+  }
+
+  object TagField {
+    val tag = "tag"
+  }
+
+}

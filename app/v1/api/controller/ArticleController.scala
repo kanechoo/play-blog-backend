@@ -2,15 +2,13 @@ package v1.api.controller
 
 import com.google.inject.Inject
 import play.api.data.Form
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent}
-import v1.api.action.{ArticleBaseController, ArticleControllerComponents}
+import v1.api.action.{ArticleBaseController, ArticleControllerComponents, ArticleRequest}
 import v1.api.cont.ConstVal._
+import v1.api.entity.ArticleForm
 
-import java.util.Date
 import scala.concurrent.{ExecutionContext, Future}
-
-case class ArticleForm(title: String, author: String, publishTime: Date, content: String)
 
 class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec: ExecutionContext)
   extends ArticleBaseController(acc) {
@@ -21,8 +19,10 @@ class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec:
         "title" -> nonEmptyText,
         "author" -> nonEmptyText,
         "publishTime" -> date,
-        "content" -> nonEmptyText
-      )(ArticleForm.apply)(ArticleForm.unapply)
+        "content" -> nonEmptyText,
+        "category" -> text,
+        "tag" -> text
+      )(ArticleForm.customApply)(ArticleForm.customUnApply)
     )
   }
 
@@ -35,6 +35,7 @@ class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec:
           }
         },
         (articleForm: ArticleForm) => {
+          println(articleForm)
           ArticleHandler.createArticle(articleForm)
             .map {
               article =>
@@ -47,6 +48,7 @@ class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec:
 
   def findById(id: Int): Action[AnyContent] = ArticleAction.async {
     implicit request =>
+      printMessage
       ArticleHandler.selectById(id)
         .map {
           article =>
@@ -54,12 +56,27 @@ class ArticleController @Inject()(acc: ArticleControllerComponents)(implicit ec:
         }
   }
 
+  def printMessage(implicit request: ArticleRequest[AnyContent]): Unit = {
+    println(s"message:${request.messagesApi.messages}")
+    println(s"queryString:${request.queryString}")
+    println(s"mediaType:${request.mediaType}")
+    println(s"path:${request.path}")
+  }
+
   def queryArticle(page: Int, size: Int): Action[AnyContent] = ArticleAction.async {
     implicit request =>
+      request.body.asJson
       ArticleHandler.selectArticle(page, size)
         .map {
           result =>
             Ok(Json.toJson(result))
         }
+  }
+
+  def postArticle: Action[JsValue] = ArticlePostAction.async {
+    implicit request =>
+      Future {
+        Ok("success")
+      }
   }
 }
