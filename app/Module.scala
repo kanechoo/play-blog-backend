@@ -13,10 +13,10 @@ class Module(environment: Environment, configuration: Configuration)
     with ScalaModule {
 
   override def configure(): Unit = {
-    bind[ArticleRepository].to[ArticleRepositoryImpl]
+    bind[ArchiveRepository].to[ArchiveRepositoryImpl]
     bind[CategoryRepository].to[CategoryRepositoryImpl]
     bind[TagRepository].to[TagRepositoryImpl]
-    bind[ArticleCategoryRepository].to[ArticleCategoryRepositoryImpl]
-    bind[ArticleTagRepository].to[ArticleTagRepositoryImpl]
+    bind[ArchiveCategoryRepository].to[ArchiveCategoryRepositoryImpl]
+    bind[ArchiveTagRepository].to[ArchiveTagRepositoryImpl]
   }
 }

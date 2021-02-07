@@ -1,6 +1,6 @@
---Article Schema
+--Archive Schema
 -- !Ups
-CREATE TABLE `article`
+CREATE TABLE `archive`
 (
     `id`          INT          NOT NULL IDENTITY,
     `title`       VARCHAR(256) NOT NULL COMMENT '文章标题',
@@ -28,23 +28,23 @@ CREATE TABLE `tag`
     PRIMARY KEY (`id`),
     CONSTRAINT "unique_tag" UNIQUE (`tag`)
 );
-CREATE TABLE `article_category`
+CREATE TABLE `archive_category`
 (
     `id`          INT NOT NULL IDENTITY,
-    `article_id`  INT,
+    `archive_id`  INT,
     `category_id` INT,
     PRIMARY KEY (`id`)
 );
-CREATE TABLE `article_tag`
+CREATE TABLE `archive_tag`
 (
     `id`         INT NOT NULL IDENTITY,
-    `article_id` INT,
+    `archive_id` INT,
     `tag_id`     INT,
     PRIMARY KEY (`id`)
 );
 -- !Downs
-DROP TABLE `article_tag`;
-DROP TABLE `article_category`;
-DROP TABLE `article`;
+DROP TABLE `archive_tag`;
+DROP TABLE `archive_category`;
+DROP TABLE `archive`;
 DROP TABLE `category`;
 DROP TABLE `tag`;

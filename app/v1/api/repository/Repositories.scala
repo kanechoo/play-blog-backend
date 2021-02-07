@@ -2,8 +2,8 @@ package v1.api.repository
 
 import com.google.inject.Inject
 
-case class Repositories @Inject()(articleRepository: ArticleRepository,
+case class Repositories @Inject()(archiveRepository: ArchiveRepository,
                                   categoryRepository: CategoryRepository,
                                   tagRepository: TagRepository,
-                                  articleCategoryRepository: ArticleCategoryRepository,
-                                  articleTagRepository: ArticleTagRepository)
+                                  archiveCategoryRepository: ArchiveCategoryRepository,
+                                  archiveTagRepository: ArchiveTagRepository)

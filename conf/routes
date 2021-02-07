@@ -1,1 +1,1 @@
-->        /v1/api/article        v1.api.router.ArticleRouter
+->        /v1/api/archive        v1.api.router.ArchiveRouter

@@ -1,10 +1,10 @@
 package v1.api.implicits
 
-import v1.api.cont.Entities.ArticleField._
+import v1.api.cont.Entities.ArchiveField._
 import v1.api.cont.Entities.CategoryField._
 import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
-import v1.api.entity.{Article, Category, SerialNumber, Tag}
+import v1.api.entity.{Archive, Category, SerialNumber, Tag}
 
 import java.sql.{Date, PreparedStatement, ResultSet}
 import scala.collection.immutable.Range
@@ -30,7 +30,7 @@ object ResultSetHelper {
       }.toList.head
     }
 
-    def asArticle: Article = ArticleResultSet.map2Article(resultSet)
+    def asArchive: Archive = ArchiveResultSet.map2Archive(resultSet)
 
     def asCategory: Category = CategoryResultSet.map2Category(resultSet)
 
@@ -51,13 +51,13 @@ object ResultSetHelper {
 
 }
 
-object ArticleResultSet {
-  def map2Article(implicit resultSet: ResultSet): Article = {
+object ArchiveResultSet {
+  def map2Archive(implicit resultSet: ResultSet): Archive = {
     val category = resultSet.getString("category")
       .split(",")
       .map {
         c =>
-          val split = ArticleResultSet.split(c)
+          val split = ArchiveResultSet.split(c)
           Category(split._1, split._2)
       }
       .toSeq
@@ -65,11 +65,11 @@ object ArticleResultSet {
       .split(",")
       .map {
         t =>
-          val split = ArticleResultSet.split(t)
+          val split = ArchiveResultSet.split(t)
           Tag(split._1, split._2)
       }
       .toSeq
-    Article(
+    Archive(
       SerialNumber(resultSet.getInt(id)),
       resultSet.getString(title),
       resultSet.getString(author),
