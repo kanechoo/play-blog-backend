@@ -35,10 +35,10 @@ object ArticleForm {
   def customApply(title: String, author: String, publishTime: java.util.Date, content: String, category: String, tag: String): ArticleForm = apply(title, author, publishTime, content, fmtCategory(category), fmtTag(tag))
 
   def fmtCategory(categoryOrTag: String): Seq[Category] = {
-    if ((null == categoryOrTag || categoryOrTag.isEmpty) || !categoryOrTag.contains(categorySplitSymbol))
+    if (null == categoryOrTag || categoryOrTag.isEmpty)
       Seq.empty
     else {
-      categoryOrTag.split("#")
+      categoryOrTag.split(categorySplitSymbol)
         .map {
           s =>
             Category(SerialNumber(0), s)
@@ -47,10 +47,10 @@ object ArticleForm {
   }
 
   def fmtTag(s: String): Seq[Tag] = {
-    if ((null == s || s.isEmpty) || !s.contains(tagSplitSymbol))
+    if (null == s || s.isEmpty)
       Seq.empty
     else {
-      s.split("#")
+      s.split(tagSplitSymbol)
         .map {
           s =>
             Tag(SerialNumber(0), s)

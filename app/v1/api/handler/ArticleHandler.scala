@@ -31,7 +31,7 @@ class ArticleHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
   }
 
   def selectById(id: Int): Future[Option[Article]] = {
-    dao.articleRepository.select(id)
+    dao.articleRepository.selectById(id)
       .map { article =>
         article
       }

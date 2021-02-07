@@ -8,25 +8,26 @@ import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionUtil._
 import v1.api.implicits.ResultSetHelper._
 
-import java.sql.Statement
 import scala.concurrent.Future
 
 @Singleton
 class ArticleCategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(implicit dataBaseExecuteContext: DataBaseExecuteContext) extends ArticleCategoryRepository {
-  override def insertOne(rel: ArticleCategoryRel): Future[Int] = {
+  override def insertOne(rel: ArticleCategoryRel): Future[Option[Int]] = {
     Future {
       database.withConnection {
         conn =>
-          val ps = conn.preparedSql("insert into article_category(article_id,category_id) values(?,?)", Statement.RETURN_GENERATED_KEYS)
+          conn.prepareStatement("select id from final table(insert ignore into article_category(article_id,category_id) values(?,?))")
             .setParams(rel.articleId, rel.categoryId)
-          ps.executeQuery()
-          ps.getGeneratedIDs.head
+            .executeQuery()
+            .toLazyList
+            .map(_.getInt(1))
+            .headOption
       }
     }
   }
 }
 
 trait ArticleCategoryRepository {
-  def insertOne(articleCategory: ArticleCategoryRel): Future[Int]
+  def insertOne(articleCategory: ArticleCategoryRel): Future[Option[Int]]
 
 }

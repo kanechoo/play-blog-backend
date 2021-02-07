@@ -6,7 +6,8 @@ import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
 import v1.api.entity.{Article, Category, SerialNumber, Tag}
 
-import java.sql.{Connection, Date, PreparedStatement, ResultSet}
+import java.sql.{Date, PreparedStatement, ResultSet}
+import scala.collection.immutable.Range
 
 object ResultSetHelper {
 
@@ -29,6 +30,11 @@ object ResultSetHelper {
       }.toList.head
     }
 
+    def asArticle: Article = ArticleResultSet.map2Article(resultSet)
+
+    def asCategory: Category = CategoryResultSet.map2Category(resultSet)
+
+    def asTag: Tag = TagResultSet.map2Tag(resultSet)
   }
 
   implicit class PreparedStatementHelper(ps: PreparedStatement) {
@@ -75,17 +81,13 @@ object TagResultSet {
 
 object ConnectionUtil {
 
-  implicit class PreparedSql(conn: Connection) {
-    def preparedSql(sql: String, statementOption: Int*): PreparedStatement = {
-      statementOption.map {
-        id =>
-          conn.prepareStatement(sql, id)
-      }
-      conn.prepareStatement(sql)
-    }
-  }
-
   implicit class Params(ps: PreparedStatement) {
+    /**
+      * Set values to placeholder statement for PreparedStatement
+      *
+      * @param params values
+      * @return PreparedStatement
+      */
     def setParams(params: Any*): PreparedStatement = {
       for (index <- params.indices) {
         val value = params(index)
@@ -100,6 +102,43 @@ object ConnectionUtil {
         }
       }
       ps
+    }
+
+    /**
+      * Set values to placeholder statement for PreparedStatement,
+      * support int and string type in query
+      * like "select * from user where id in(?,?,?)"
+      *
+      * @param params values
+      * @return preparedStatement
+      */
+    def setInParams(params: Seq[Any]): PreparedStatement = {
+      for (index <- Range(0, params.length)) {
+        val param = params(index)
+        param match {
+          case _: Int => ps.setInt(index + 1, param.asInstanceOf[Int])
+          case _: String => ps.setString(index + 1, param.asInstanceOf[String])
+          case _ =>
+        }
+      }
+      ps
+    }
+  }
+
+}
+
+object PreparedStatementPlaceHolder {
+
+  implicit class PlaceHolder(private val times: Int) {
+    def params: String = {
+      val holder = new StringBuilder
+      Range(0, times)
+        .foreach {
+          i =>
+            holder.append("?").append(",")
+        }
+      holder.deleteCharAt(holder.length - 1)
+      holder.toString
     }
   }
 

@@ -1,3 +1,3 @@
 package v1.api.page
 
-case class Page[+A](items: List[A], page: Int, size: Int, total: Long)
+case class Page[+A](items: Seq[A], page: Int, size: Int, total: Long)

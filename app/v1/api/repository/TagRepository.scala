@@ -7,15 +7,13 @@ import v1.api.entity.Tag
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionUtil._
 import v1.api.implicits.ResultSetHelper._
-import v1.api.implicits.TagResultSet._
 
-import java.sql.Statement
 import scala.concurrent.Future
 
 trait TagRepository {
   def getById(id: Int): Future[Option[Tag]]
 
-  def insertOne(tag: Tag): Future[Int]
+  def insertOne(tag: Tag): Future[Option[Int]]
 
   def batchInsert(tag: Seq[Tag]): Future[Seq[Int]]
 }
@@ -26,24 +24,26 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     Future {
       database.withConnection {
         conn =>
-          conn.preparedSql("select * from tag where id=?")
+          conn.prepareStatement("select * from tag where id=?")
             .setParams(id)
             .executeQuery()
             .toLazyList
-            .map(map2Tag(_))
+            .map(_.asTag)
             .headOption
       }
     }
   }
 
-  override def insertOne(tag: Tag): Future[Int] = {
+  override def insertOne(tag: Tag): Future[Option[Int]] = {
     Future {
       database.withConnection {
         conn =>
-          val ps = conn.preparedSql("insert into tag(tag) values(?)")
+          conn.prepareStatement("select id from final table(insert ignore into tag(tag) values(?))")
             .setParams(tag.tag)
-          ps.executeQuery()
-          ps.getGeneratedIDs.head
+            .executeQuery()
+            .toLazyList
+            .map(_.getInt(1))
+            .headOption
       }
     }
   }
@@ -52,7 +52,7 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     Future {
       database.withConnection {
         conn =>
-          val ps = conn.preparedSql("insert into tag(tag) values(?)", Statement.RETURN_GENERATED_KEYS)
+          val ps = conn.prepareStatement("insert ignore into tag(tag) values(?)")
           tag.foreach {
             t =>
               ps.setParams(t.tag).addBatch()

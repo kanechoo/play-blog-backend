@@ -12,4 +12,5 @@ bin/
 /gatling/target
 /conf/*.*
 !/conf/*.conf
+!/conf/*.xml
 !/conf/evolutions/
