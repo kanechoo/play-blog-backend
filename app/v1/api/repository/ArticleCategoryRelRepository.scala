@@ -25,9 +25,24 @@ class ArticleCategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: D
       }
     }
   }
+
+  override def batchInsert(seq: Seq[ArticleCategoryRel]): Future[Array[Int]] = {
+    Future {
+      database.withConnection {
+        conn =>
+          val ps = conn.prepareStatement("insert into ARTICLE_CATEGORY(article_id, category_id) values ( ?,? )")
+          seq.foreach {
+            ac =>
+              ps.setParams(ac.articleId, ac.categoryId).addBatch()
+          }
+          ps.executeBatch()
+      }
+    }
+  }
 }
 
 trait ArticleCategoryRepository {
   def insertOne(articleCategory: ArticleCategoryRel): Future[Option[Int]]
 
+  def batchInsert(seq: Seq[ArticleCategoryRel]): Future[Array[Int]]
 }

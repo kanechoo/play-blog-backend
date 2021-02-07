@@ -53,3 +53,8 @@ object Entities {
   }
 
 }
+
+object ArticleSql {
+  val selectSql = "select ARTICLE.*,GROUP_CONCAT(DISTINCT CONCAT(C.ID,'#',C.CATEGORY)) as category ,GROUP_CONCAT(DISTINCT CONCAT(T.ID,'#',T.TAG)) as tag from ARTICLE left join ARTICLE_CATEGORY AC on ARTICLE.ID = AC.ARTICLE_ID left join ARTICLE_TAG AT on ARTICLE.ID = AT.ARTICLE_ID left join CATEGORY C on AC.CATEGORY_ID = C.ID left join TAG T on T.ID = AT.TAG_ID"
+}
+

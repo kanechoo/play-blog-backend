@@ -2,7 +2,7 @@ package v1.api.handler
 
 import com.google.inject.Inject
 import play.api.Logger
-import v1.api.entity.{Article, ArticleForm}
+import v1.api.entity.{Article, ArticleCategoryRel, ArticleForm, ArticleTagRel}
 import v1.api.page.Page
 import v1.api.repository.Repositories
 
@@ -14,17 +14,21 @@ class ArticleHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
   def createArticle(form: ArticleForm): Future[Article] = {
 
     dao.articleRepository.insertOne(form.getArticle)
-      .map(id => {
-        log.debug(s"inserted article id : $id")
+      .map(aId => {
+        log.debug(s"inserted article id : $aId")
         dao.categoryRepository.batchInsert(form.category)
           .map {
-            categoryId =>
-              log.debug(s"inserted category ids : $categoryId")
+            cIds =>
+              log.debug(s"inserted category ids : $cIds")
+              dao.articleCategoryRepository
+                .batchInsert(cIds.map(ArticleCategoryRel(aId.get, _)))
           }
         dao.tagRepository.batchInsert(form.tag)
           .map {
-            tagId =>
-              log.debug(s"inserted tag ids : $tagId")
+            tIds =>
+              log.debug(s"inserted tag ids : $tIds")
+              dao.articleTagRepository
+                .batchInsert(tIds.map(ArticleTagRel(aId.get, _)))
           }
         form.getArticle
       })
@@ -37,8 +41,10 @@ class ArticleHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       }
   }
 
-  def selectArticle(page: Int, size: Int): Future[Page[Article]] = dao.articleRepository.list(page, size).map {
-    result =>
-      result
+  def selectArticle(page: Int, size: Int): Future[Page[Article]] = {
+    dao.articleRepository.list(page, size).map {
+      result =>
+        result
+    }
   }
 }

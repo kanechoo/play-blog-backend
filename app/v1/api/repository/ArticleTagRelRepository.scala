@@ -24,8 +24,24 @@ class ArticleTagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Databa
       }
     }
   }
+
+  override def batchInsert(seq: Seq[ArticleTagRel]): Future[Array[Int]] = {
+    Future {
+      database.withConnection {
+        conn =>
+          val ps = conn.prepareStatement("insert into ARTICLE_TAG(article_id, tag_id) values ( ?,? )")
+          seq.foreach {
+            at =>
+              ps.setParams(at.articleId, at.tagId).addBatch()
+          }
+          ps.executeBatch()
+      }
+    }
+  }
 }
 
 trait ArticleTagRepository {
   def insertOne(articleCategory: ArticleTagRel): Future[Option[Int]]
+
+  def batchInsert(seq: Seq[ArticleTagRel]): Future[Array[Int]]
 }

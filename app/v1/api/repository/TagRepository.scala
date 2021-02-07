@@ -6,6 +6,7 @@ import play.db.NamedDatabase
 import v1.api.entity.Tag
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.PreparedStatementPlaceHolder._
 import v1.api.implicits.ResultSetHelper._
 
 import scala.concurrent.Future
@@ -58,7 +59,12 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
               ps.setParams(t.tag).addBatch()
           }
           ps.executeBatch()
-          ps.getGeneratedIDs
+          conn.prepareStatement(s"select * from TAG where tag in(${tag.length.params})")
+            .setInParams(tag.map(_.tag))
+            .executeQuery()
+            .toLazyList
+            .map(_.getInt("id"))
+            .toList
       }
     }
   }

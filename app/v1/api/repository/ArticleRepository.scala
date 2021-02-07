@@ -3,6 +3,7 @@ package v1.api.repository
 import com.google.inject.{Inject, Singleton}
 import play.api.db.Database
 import play.db.NamedDatabase
+import v1.api.cont.ArticleSql._
 import v1.api.entity.Article
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionUtil._
@@ -19,7 +20,7 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def selectById(id: Int): Future[Option[Article]] = {
     Future {
       database.withConnection(conn => {
-        conn.prepareStatement("select * from Article where id=?")
+        conn.prepareStatement(selectSql + " where `article`.id=?")
           .setParams(id)
           .executeQuery()
           .toLazyList
@@ -58,8 +59,8 @@ class ArticleRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .getRowCount
         val maxSize = Math.min(10, size)
         val offset = (Math.max(1, page) - 1) * maxSize
-        val items = conn.prepareStatement("select * from Article limit ?,?")
-          .setParams(offset, maxSize)
+        val items = conn.prepareStatement(selectSql + " limit ? offset ?")
+          .setParams(maxSize, offset)
           .executeQuery()
           .toLazyList.map(_.asArticle)
           .toList

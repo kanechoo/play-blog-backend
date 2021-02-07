@@ -53,6 +53,22 @@ object ResultSetHelper {
 
 object ArticleResultSet {
   def map2Article(implicit resultSet: ResultSet): Article = {
+    val category = resultSet.getString("category")
+      .split(",")
+      .map {
+        c =>
+          val split = ArticleResultSet.split(c)
+          Category(split._1, split._2)
+      }
+      .toSeq
+    val tag = resultSet.getString("tag")
+      .split(",")
+      .map {
+        t =>
+          val split = ArticleResultSet.split(t)
+          Tag(split._1, split._2)
+      }
+      .toSeq
     Article(
       SerialNumber(resultSet.getInt(id)),
       resultSet.getString(title),
@@ -60,9 +76,13 @@ object ArticleResultSet {
       resultSet.getDate(publishTime),
       resultSet.getString(content),
       resultSet.getDate(createTime),
-      null,
-      null
+      category,
+      tag
     )
+  }
+
+  def split(s: String): (SerialNumber, String) = {
+    (SerialNumber(Integer.parseInt(s.split("#")(0))), s.split("#")(1))
   }
 }
 

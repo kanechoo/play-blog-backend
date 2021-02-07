@@ -74,8 +74,7 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
             .setInParams(category.map(_.category))
             .executeQuery()
             .toLazyList
-            .map(_.asCategory)
-            .map(_.serialNumber.id)
+            .map(_.getInt("id"))
             .toList
       }
     }
