@@ -21,12 +21,9 @@ class ArchiveRouter @Inject()(ac: ArchiveController) extends SimpleRouter {
   override def routes: Routes = {
     case POST(p"/") =>
       ac.createNewArchive
-    case GET(p"/") & (q"page=$page" & q"size=$size") =>
-      ac.queryArchive(page.toInt, size.toInt)
+    case GET(p"/") =>
+      ac.findArchives
     case GET(p"/$id") =>
       ac.findById(Integer.parseInt(id))
-    case POST(p"/test") =>
-      println("success")
-      ac.postArchive
   }
 }

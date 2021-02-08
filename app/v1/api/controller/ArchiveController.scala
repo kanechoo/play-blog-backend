@@ -2,7 +2,7 @@ package v1.api.controller
 
 import com.google.inject.Inject
 import play.api.data.Form
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents, ArchiveRequest}
 import v1.api.cont.Const._
@@ -47,11 +47,20 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
 
   def findById(id: Int): Action[AnyContent] = ArchiveAction.async {
     implicit request =>
-      printMessage
       ArchiveHandler.selectById(id)
         .map {
           archive =>
             Ok(Json.toJson(archive))
+        }
+  }
+
+  def findArchives: Action[AnyContent] = ArchiveAction.async {
+    implicit request =>
+      printMessage
+      ArchiveHandler.selectArchive(request.archiveQueryParams)
+        .map {
+          result =>
+            Ok(Json.toJson(result))
         }
   }
 
@@ -62,20 +71,17 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
     println(s"path:${request.path}")
   }
 
-  def queryArchive(page: Int, size: Int): Action[AnyContent] = ArchiveAction.async {
-    implicit request =>
-      request.body.asJson
-      ArchiveHandler.selectArchive(page, size)
-        .map {
-          result =>
-            Ok(Json.toJson(result))
-        }
+  def findByCategoryName(categoryName: String): Action[AnyContent] = ArchiveAction.async {
+    request =>
+      Future {
+        Ok("")
+      }
   }
 
-  def postArchive: Action[JsValue] = ArchivePostAction.async {
-    implicit request =>
+  def findByTagName(tagName: String): Action[AnyContent] = ArchiveAction.async {
+    request =>
       Future {
-        Ok("success")
+        Ok("")
       }
   }
 }

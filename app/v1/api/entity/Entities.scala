@@ -15,9 +15,14 @@ case class ArchiveCategoryRel(archiveId: Int, categoryId: Int)
 
 case class ArchiveTagRel(archiveId: Int, tagId: Int)
 
+trait ArchiveQueryHandler {
+  def archiveQueryParams: ArchiveQueryParams
+}
+
+case class ArchiveQueryParams(offset: Int, limit: Int, order: Option[String])
 
 case class ArchiveForm(title: String, author: String, publishTime: java.util.Date, content: String, category: Seq[Category], tag: Seq[Tag]) {
-  def getArchive: Archive = {
+  def getArchiveFormData: Archive = {
     Archive(
       SerialNumber(0),
       title,

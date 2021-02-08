@@ -1,10 +1,11 @@
 package v1.api.implicits
 
+import play.api.mvc.RequestHeader
 import v1.api.cont.Entities.ArchiveField._
 import v1.api.cont.Entities.CategoryField._
 import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
-import v1.api.entity.{Archive, Category, SerialNumber, Tag}
+import v1.api.entity._
 
 import java.sql.{Date, PreparedStatement, ResultSet}
 import scala.collection.immutable.Range
@@ -110,14 +111,14 @@ object ConnectionUtil {
       */
     def setParams(params: Any*): PreparedStatement = {
       for (index <- params.indices) {
-        val value = params(index)
+        val param = params(index)
         val columnIndex = index + 1
-        value match {
-          case _: Int => ps.setInt(columnIndex, value.asInstanceOf[Int])
-          case _: Long => ps.setLong(columnIndex, value.asInstanceOf[Long])
-          case _: String => ps.setString(columnIndex, value.asInstanceOf[String])
-          case _: Date => ps.setDate(columnIndex, value.asInstanceOf[Date])
-          case _: java.util.Date => ps.setDate(columnIndex, new Date(value.asInstanceOf[java.util.Date].getTime))
+        param match {
+          case _: Int => ps.setInt(columnIndex, param.asInstanceOf[Int])
+          case _: Long => ps.setLong(columnIndex, param.asInstanceOf[Long])
+          case _: String => ps.setString(columnIndex, param.asInstanceOf[String])
+          case _: Date => ps.setDate(columnIndex, param.asInstanceOf[Date])
+          case _: java.util.Date => ps.setDate(columnIndex, new Date(param.asInstanceOf[java.util.Date].getTime))
           case _ =>
         }
       }
@@ -163,6 +164,20 @@ object PreparedStatementPlaceHolder {
   }
 
 }
+
+object RequestHandler {
+
+  implicit class BindRequest(request: RequestHeader) {
+    def bindRequestQueryString: ArchiveQueryParams = {
+      val limit = Math.min(10, Integer.parseInt(request.getQueryString("size").orElse(Some("10")).head))
+      val offset = (Math.max(1, Integer.parseInt(request.getQueryString("page").orElse(Some("1")).head)) - 1) * limit
+      val order = request.getQueryString("order")
+      ArchiveQueryParams(offset, limit, order)
+    }
+  }
+
+}
+
 
 
 
