@@ -93,7 +93,7 @@ object ArchiveForm {
   }
 }
 
-class SerialNumber private(val id: Int) extends AnyVal
+case class SerialNumber private(id: Int) extends AnyVal
 
 object SerialNumber {
   def apply(serialNumber: Int): SerialNumber = new SerialNumber(serialNumber)

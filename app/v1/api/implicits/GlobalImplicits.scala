@@ -21,14 +21,14 @@ object ResultSetHelper {
       }.to(LazyList)
     }
 
-    def getRowCount: Long = {
+    def getRowCount: Option[Long] = {
       new Iterator[Long] {
         override def hasNext: Boolean = resultSet.next()
 
         override def next(): Long = {
           resultSet.getInt(1).toLong
         }
-      }.toList.head
+      }.toList.headOption
     }
 
     def asArchive: Archive = ArchiveResultSet.map2Archive(resultSet)
@@ -100,7 +100,7 @@ object TagResultSet {
   }
 }
 
-object ConnectionUtil {
+object ConnectionHelper {
 
   implicit class Params(ps: PreparedStatement) {
     /**

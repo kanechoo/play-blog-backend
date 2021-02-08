@@ -81,9 +81,11 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
   }
 
   def findByTagName(tagName: String): Action[AnyContent] = ArchiveAction.async {
-    request =>
-      Future {
-        Ok("")
-      }
+    implicit request =>
+      ArchiveHandler.selectByTagName(tagName)
+        .map {
+          result =>
+            Ok(Json.toJson(result))
+        }
   }
 }

@@ -6,7 +6,7 @@ import play.api.db.Database
 import play.db.NamedDatabase
 import v1.api.entity.Category
 import v1.api.execute.DataBaseExecuteContext
-import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.PreparedStatementPlaceHolder._
 import v1.api.implicits.ResultSetHelper._
 

@@ -8,7 +8,7 @@ import v1.api.action.ArchiveRequest
 import v1.api.cont.ArchiveSql._
 import v1.api.entity.Archive
 import v1.api.execute.DataBaseExecuteContext
-import v1.api.implicits.ConnectionUtil._
+import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.ResultSetHelper._
 import v1.api.page.Page
 
@@ -59,6 +59,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
         val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
           .executeQuery()
           .getRowCount
+          .getOrElse(0L)
         val params = request.archiveQueryParams
         val items = conn.prepareStatement(selectSql)
           .setParams(params.limit, params.offset)
@@ -71,17 +72,28 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
+  override def selectByCategoryNameOrTagName(name: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
     Future {
       database.withConnection {
         conn =>
+          var totalSql = ""
+          var sql = ""
+          if (request.uri.contains("/tag/")) {
+            sql = selectByTagNameSql
+            totalSql = selectCountByTagNameSql
+          }
+          else if (request.uri.contains("/category/")) {
+            sql = selectByCategoryNameSql
+            totalSql = selectCountByCategoryNameSql
+          }
           val params = request.archiveQueryParams
-          val total = conn.prepareStatement(selectCountByCategoryNameSql)
-            .setParams(categoryName)
+          val total = conn.prepareStatement(totalSql)
+            .setParams(name)
             .executeQuery()
             .getRowCount
-          val items = conn.prepareStatement(selectByCategoryNameSql)
-            .setParams(categoryName,
+            .getOrElse(0L)
+          val items = conn.prepareStatement(sql)
+            .setParams(name,
               params.limit,
               params.offset)
             .executeQuery()
@@ -92,10 +104,6 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           Page(items, page, params.limit, total)
       }
     }
-  }
-
-  override def selectByTagName(tagName: String): Future[Page[Archive]] = {
-    null
   }
 }
 
@@ -108,7 +116,5 @@ trait ArchiveRepository {
 
   def insertOne(archive: Archive): Future[Option[Int]]
 
-  def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
-
-  def selectByTagName(tagName: String): Future[Page[Archive]]
+  def selectByCategoryNameOrTagName(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 }
