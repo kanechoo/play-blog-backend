@@ -83,6 +83,15 @@ object ArchiveSql {
       |group by ARCHIVE.ID
       |limit ? offset ?
       |""".stripMargin
+  val selectCountByCategoryNameSql: String =
+    """
+      |select count(*)
+      |from ARCHIVE
+      |         left join ARCHIVE_CATEGORY AC on ARCHIVE.ID = AC.ARCHIVE_ID
+      |         left join CATEGORY C on AC.CATEGORY_ID = C.ID
+      |where C.CATEGORY=?
+      |group by C.ID
+      |""".stripMargin
   val selectByTagNameSql: String =
     """
       |select ARCHIVE.*,
@@ -97,6 +106,14 @@ object ArchiveSql {
       |group by ARCHIVE.ID
       |limit ? offset ?
       |""".stripMargin
-
+  val selectCountByTagNameSql: String =
+    """
+      |select count(*)
+      |from ARCHIVE
+      |         left join ARCHIVE_TAG AT on ARCHIVE.ID = AT.ARCHIVE_ID
+      |         left join TAG T on T.ID = AT.TAG_ID
+      |where T.TAG=?
+      |group by T.ID
+      |""".stripMargin
 }
 

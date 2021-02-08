@@ -56,7 +56,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
     Future {
       database.withConnection(conn => {
-        val total: Long = conn.prepareStatement("select count(*) from Archive")
+        val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
           .executeQuery()
           .getRowCount
         val params = request.archiveQueryParams
@@ -71,8 +71,27 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def selectByCategoryName(categoryName: String): Future[Page[Archive]] = {
-    null
+  override def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
+    Future {
+      database.withConnection {
+        conn =>
+          val params = request.archiveQueryParams
+          val total = conn.prepareStatement(selectCountByCategoryNameSql)
+            .setParams(categoryName)
+            .executeQuery()
+            .getRowCount
+          val items = conn.prepareStatement(selectByCategoryNameSql)
+            .setParams(categoryName,
+              params.limit,
+              params.offset)
+            .executeQuery()
+            .toLazyList
+            .map(_.asArchive)
+            .toList
+          val page = (params.offset / params.limit) + 1
+          Page(items, page, params.limit, total)
+      }
+    }
   }
 
   override def selectByTagName(tagName: String): Future[Page[Archive]] = {
@@ -89,7 +108,7 @@ trait ArchiveRepository {
 
   def insertOne(archive: Archive): Future[Option[Int]]
 
-  def selectByCategoryName(categoryName: String): Future[Page[Archive]]
+  def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 
   def selectByTagName(tagName: String): Future[Page[Archive]]
 }

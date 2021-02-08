@@ -50,8 +50,9 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
     }
   }
 
-  def selectByCategoryName(categoryName: String): Future[Page[Archive]] = {
-    null
+  def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
+    dao.archiveRepository
+      .selectByCategoryName(categoryName)
   }
 
   def selectByTagName(tagName: String): Future[Page[Archive]] = {
