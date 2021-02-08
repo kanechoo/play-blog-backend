@@ -2,6 +2,8 @@ package v1.api.handler
 
 import com.google.inject.Inject
 import play.api.Logger
+import play.api.mvc.AnyContent
+import v1.api.action.ArchiveRequest
 import v1.api.entity._
 import v1.api.page.Page
 import v1.api.repository.Repositories
@@ -41,8 +43,8 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       }
   }
 
-  def selectArchive(archiveQueryParams: ArchiveQueryParams): Future[Page[Archive]] = {
-    dao.archiveRepository.list(archiveQueryParams).map {
+  def selectArchive()(implicit archiveRequest: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
+    dao.archiveRepository.list().map {
       result =>
         result
     }

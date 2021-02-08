@@ -10,7 +10,7 @@ import v1.api.log.RequestLogMarker
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ArchiveRequest[A](request: Request[A], val messagesApi: MessagesApi, val archiveQueryParams: ArchiveQueryParams) extends WrappedRequest(request)
+class ArchiveRequest[A] @Inject()(request: Request[A], val messagesApi: MessagesApi, val archiveQueryParams: ArchiveQueryParams) extends WrappedRequest(request)
   with PreferredMessagesProvider with ArchiveQueryHandler
 
 class ArchiveActionBuilder @Inject()(playBodyParsers: PlayBodyParsers, messagesApi: MessagesApi)(implicit val executionContext: ExecutionContext) extends

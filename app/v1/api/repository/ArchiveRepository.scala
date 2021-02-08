@@ -2,9 +2,11 @@ package v1.api.repository
 
 import com.google.inject.{Inject, Singleton}
 import play.api.db.Database
+import play.api.mvc.AnyContent
 import play.db.NamedDatabase
+import v1.api.action.ArchiveRequest
 import v1.api.cont.ArchiveSql._
-import v1.api.entity.{Archive, ArchiveQueryParams}
+import v1.api.entity.Archive
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionUtil._
 import v1.api.implicits.ResultSetHelper._
@@ -51,12 +53,13 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def list(params: ArchiveQueryParams): Future[Page[Archive]] = {
+  override def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
     Future {
       database.withConnection(conn => {
         val total: Long = conn.prepareStatement("select count(*) from Archive")
           .executeQuery()
           .getRowCount
+        val params = request.archiveQueryParams
         val items = conn.prepareStatement(selectSql)
           .setParams(params.limit, params.offset)
           .executeQuery()
@@ -78,7 +81,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
 }
 
 trait ArchiveRepository {
-  def list(archiveQueryParams: ArchiveQueryParams): Future[Page[Archive]]
+  def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 
   def selectById(id: Int): Future[Option[Archive]]
 

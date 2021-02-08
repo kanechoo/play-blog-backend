@@ -57,7 +57,7 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
   def findArchives: Action[AnyContent] = ArchiveAction.async {
     implicit request =>
       printMessage
-      ArchiveHandler.selectArchive(request.archiveQueryParams)
+      ArchiveHandler.selectArchive()
         .map {
           result =>
             Ok(Json.toJson(result))
