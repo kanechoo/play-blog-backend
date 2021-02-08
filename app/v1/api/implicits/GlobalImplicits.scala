@@ -28,7 +28,8 @@ object ResultSetHelper {
         override def next(): Long = {
           resultSet.getInt(1).toLong
         }
-      }.toList.headOption
+      }.toList
+        .headOption
     }
 
     def asArchive: Archive = ArchiveResultSet.map2Archive(resultSet)
