@@ -9,7 +9,11 @@ case class Archive(serialNumber: SerialNumber, title: String, author: String, pu
 
 case class Category(serialNumber: SerialNumber, category: String)
 
+case class CategoryCount(category: String, count: Int)
+
 case class Tag(serialNumber: SerialNumber, tag: String)
+
+case class TagCount(tag: String, count: Int)
 
 case class ArchiveCategoryRel(archiveId: Int, categoryId: Int)
 

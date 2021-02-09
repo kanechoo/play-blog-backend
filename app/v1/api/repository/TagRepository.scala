@@ -3,7 +3,7 @@ package v1.api.repository
 import com.google.inject.{Inject, Singleton}
 import play.api.db.Database
 import play.db.NamedDatabase
-import v1.api.entity.Tag
+import v1.api.entity.{Tag, TagCount}
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.PreparedStatementPlaceHolder._
@@ -17,6 +17,8 @@ trait TagRepository {
   def insertOne(tag: Tag): Future[Option[Int]]
 
   def batchInsert(tag: Seq[Tag]): Future[Seq[Int]]
+
+  def findAll: Future[Seq[TagCount]]
 }
 
 @Singleton
@@ -66,6 +68,20 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
             .map(_.getInt("id"))
             .toList
       }
+    }
+  }
+
+  override def findAll: Future[Seq[TagCount]] = Future {
+    database.withConnection {
+      conn =>
+        conn.prepareStatement("SELECT TAG.TAG as tag,COUNT(*) as count FROM TAG LEFT JOIN ARCHIVE_TAG ON TAG.ID = ARCHIVE_TAG.TAG_ID GROUP BY TAG.TAG ORDER BY count DESC")
+          .executeQuery()
+          .toLazyList
+          .map {
+            resultSet =>
+              TagCount(resultSet.getString("tag"), resultSet.getInt("count"))
+          }
+          .toList
     }
   }
 }

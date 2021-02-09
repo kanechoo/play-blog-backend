@@ -1,15 +1,16 @@
 package v1.api.controller
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents, ArchiveRequest}
-import v1.api.cont.Const._
+import v1.api.cont.JsonWrites.{defaultJsonWrites, pageDefaultJsonWrites}
 import v1.api.entity.ArchiveForm
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec: ExecutionContext)
   extends ArchiveBaseController(acc) {
   private val form: Form[ArchiveForm] = {
