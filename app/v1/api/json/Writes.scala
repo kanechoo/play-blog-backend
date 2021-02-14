@@ -22,8 +22,8 @@ class ProductWrites[A <: Product] extends Writes[A] with DefaultWrites {
   }
 
   def format[P <: Product](list: Seq[P]): JsValue = {
-    list.foldRight(JsArray.empty) {
-      (anyType, jsonArray) =>
+    list.foldLeft(JsArray.empty) {
+      (jsonArray, anyType) =>
         jsonArray.append(format(anyType))
     }
   }
@@ -35,7 +35,13 @@ class ProductWrites[A <: Product] extends Writes[A] with DefaultWrites {
     case sqlDate: Date => JsNumber(sqlDate.asInstanceOf[Date].getTime)
     case javaDate: java.util.Date => JsNumber(javaDate.getTime)
     case p: Product => format(p)
-    case anyList: Seq[_] => format(anyList.map(e => e.asInstanceOf[Product]))
+    case seq: Seq[_] =>
+      if (seq.nonEmpty && seq.head.isInstanceOf[Product]) {
+        format(seq.map(p => p.asInstanceOf[Product]))
+      }
+      else {
+        JsNull
+      }
     case _ => JsNull
   }
 }

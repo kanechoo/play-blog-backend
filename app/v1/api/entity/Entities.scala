@@ -12,7 +12,6 @@ case class NextArchive(serialNumber: SerialNumber, title: String)
 
 case class FocusArchive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag], previous: PreviousArchive, next: NextArchive)
 
-
 case class Category(serialNumber: SerialNumber, category: String)
 
 case class CategoryCount(value: String, count: Int)
