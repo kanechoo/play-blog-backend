@@ -76,9 +76,9 @@ object ArchiveResultSet {
       SerialNumber(resultSet.getInt(id)),
       resultSet.getString(title),
       resultSet.getString(author),
-      resultSet.getDate(publishTime),
+      new Date(resultSet.getTimestamp(publishTime).getTime),
       resultSet.getString(content),
-      resultSet.getDate(createTime),
+      new Date(resultSet.getTimestamp(createTime).getTime),
       category,
       tag
     )
@@ -116,7 +116,6 @@ object ConnectionHelper {
         val param = params(index)
         val columnIndex = index + 1
         param match {
-
           case _: Int => ps.setInt(columnIndex, param.asInstanceOf[Int])
           case _: Long => ps.setLong(columnIndex, param.asInstanceOf[Long])
           case _: String => ps.setString(columnIndex, param.asInstanceOf[String])
