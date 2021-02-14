@@ -29,7 +29,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .map(_.asArchive)
           .headOption
         if (archive.nonEmpty) {
-          val next = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME <= ? order by PUBLISHTIME limit 1")
+          val next = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME < ? order by PUBLISHTIME limit 1")
             .setParams(archive.head.publishTime)
             .executeQuery()
             .toLazyList

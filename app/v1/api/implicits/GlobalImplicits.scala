@@ -8,7 +8,7 @@ import v1.api.cont.Entities.TagField._
 import v1.api.cont.Page._
 import v1.api.entity._
 
-import java.sql.{Date, PreparedStatement, ResultSet}
+import java.sql.{Date, PreparedStatement, ResultSet, Timestamp}
 import scala.collection.immutable.Range
 
 object ResultSetHelper {
@@ -116,11 +116,12 @@ object ConnectionHelper {
         val param = params(index)
         val columnIndex = index + 1
         param match {
+
           case _: Int => ps.setInt(columnIndex, param.asInstanceOf[Int])
           case _: Long => ps.setLong(columnIndex, param.asInstanceOf[Long])
           case _: String => ps.setString(columnIndex, param.asInstanceOf[String])
-          case _: Date => ps.setDate(columnIndex, param.asInstanceOf[Date])
-          case _: java.util.Date => ps.setDate(columnIndex, new Date(param.asInstanceOf[java.util.Date].getTime))
+          case _: Date => ps.setTimestamp(columnIndex, new Timestamp(param.asInstanceOf[Date].getTime))
+          case _: java.util.Date => ps.setTimestamp(columnIndex, new Timestamp(param.asInstanceOf[java.util.Date].getTime))
           case _ =>
         }
       }
