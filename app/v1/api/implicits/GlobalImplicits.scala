@@ -5,6 +5,7 @@ import v1.api.cont.Entities.ArchiveField._
 import v1.api.cont.Entities.CategoryField._
 import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
+import v1.api.cont.Page._
 import v1.api.entity._
 
 import java.sql.{Date, PreparedStatement, ResultSet}
@@ -170,7 +171,7 @@ object RequestHandler {
 
   implicit class BindRequest(request: RequestHeader) {
     def bindRequestQueryString: ArchiveQueryParams = {
-      val limit = Math.min(10, Integer.parseInt(request.getQueryString("size").orElse(Some("10")).head))
+      val limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some("5")).head))
       val offset = (Math.max(1, Integer.parseInt(request.getQueryString("page").orElse(Some("1")).head)) - 1) * limit
       val order = request.getQueryString("order")
       ArchiveQueryParams(offset, limit, order)

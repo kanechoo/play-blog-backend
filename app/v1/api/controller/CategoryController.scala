@@ -13,6 +13,7 @@ class CategoryController @Inject()(cc: ControllerComponents, repository: Categor
                                   (implicit ec: ExecutionContext) extends AbstractController(cc) {
   def findCategory: Action[AnyContent] = Action.async {
     implicit request =>
+
       repository.findAll.map {
         result =>
           Ok(Json.toJson(result))

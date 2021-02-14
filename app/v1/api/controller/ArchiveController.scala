@@ -5,7 +5,7 @@ import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents, ArchiveRequest}
-import v1.api.cont.JsonWrites.{defaultJsonWrites, pageDefaultJsonWrites}
+import v1.api.cont.JsonWrites.{defaultJsonWrites, focusArchiveWrites, pageDefaultJsonWrites}
 import v1.api.entity.ArchiveForm
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,7 +19,7 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
       mapping(
         "title" -> nonEmptyText,
         "author" -> nonEmptyText,
-        "publishTime" -> date,
+        "publishTime" -> date("yyyy-MM-dd HH:mm:ss"),
         "content" -> nonEmptyText,
         "category" -> text,
         "tag" -> text

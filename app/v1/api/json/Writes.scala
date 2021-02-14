@@ -44,6 +44,7 @@ class PageProductWrites[A <: Product] extends ProductWrites[Page[A]] {
   override def writes(P: Page[A]): JsValue = {
     val result: JsObject = JsObject.empty
     val jsonArray = format(P.items)
-    result + (page, JsNumber(P.page)) + (size, JsNumber(P.size)) + (total, JsNumber(P.total)) + (data, jsonArray)
+    val totalP = Double.box(P.total.toDouble / maxItemSize).intValue() + 1
+    result + (page, JsNumber(P.page)) + (size, JsNumber(P.size)) + (total, JsNumber(P.total)) + (totalPage, JsNumber(totalP)) + (data, jsonArray)
   }
 }

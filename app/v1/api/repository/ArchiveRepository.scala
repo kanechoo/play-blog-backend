@@ -6,7 +6,7 @@ import play.api.mvc.AnyContent
 import play.db.NamedDatabase
 import v1.api.action.ArchiveRequest
 import v1.api.cont.ArchiveSql._
-import v1.api.entity.Archive
+import v1.api.entity._
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.ResultSetHelper._
@@ -19,15 +19,34 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
                                      (implicit dataBaseExecuteContext: DataBaseExecuteContext) extends ArchiveRepository {
 
 
-  override def selectById(id: Int): Future[Option[Archive]] = {
+  override def selectById(id: Int): Future[Option[FocusArchive]] = {
     Future {
       database.withConnection(conn => {
-        conn.prepareStatement(selectByIdSql)
+        val archive = conn.prepareStatement(selectByIdSql)
           .setParams(id)
           .executeQuery()
           .toLazyList
           .map(_.asArchive)
           .headOption
+        if (archive.nonEmpty) {
+          val next = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME <= ? order by PUBLISHTIME limit 1")
+            .setParams(archive.head.publishTime)
+            .executeQuery()
+            .toLazyList
+            .map(res => NextArchive(SerialNumber(res.getInt("id")), res.getString("title")))
+            .headOption
+          val previous = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME > ? order by PUBLISHTIME limit 1")
+            .setParams(archive.head.publishTime)
+            .executeQuery()
+            .toLazyList
+            .map(res => PreviousArchive(SerialNumber(res.getInt("id")), res.getString("title")))
+            .headOption
+          val a = archive.get
+          Some(FocusArchive(a.serialNumber, a.title, a.author, a.publishTime, a.content, a.createTime, a.category, a.tag, previous.orNull, next.orNull))
+        }
+        else {
+          None
+        }
       })
     }
   }
@@ -37,16 +56,16 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     Future {
       database.withConnection {
         conn => {
-          conn.prepareStatement("""select id from final table (insert ignore into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?))""")
+          val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
             .setParams(archive.title,
               archive.author,
               archive.publishTime,
               archive.content,
               archive.createTime)
-            .executeQuery()
+          ps.executeUpdate()
+          ps.getGeneratedKeys
             .toLazyList
             .map(_.getInt(1))
-            .toList
             .headOption
         }
       }
@@ -110,7 +129,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
 trait ArchiveRepository {
   def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 
-  def selectById(id: Int): Future[Option[Archive]]
+  def selectById(id: Int): Future[Option[FocusArchive]]
 
   //def search(key: String): Future[Option[List[Archive]]]
 

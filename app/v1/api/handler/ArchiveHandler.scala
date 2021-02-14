@@ -36,7 +36,7 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       })
   }
 
-  def selectById(id: Int): Future[Option[Archive]] = {
+  def selectById(id: Int): Future[Option[FocusArchive]] = {
     dao.archiveRepository.selectById(id)
       .map { archive =>
         archive

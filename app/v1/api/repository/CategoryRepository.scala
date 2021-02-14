@@ -7,7 +7,6 @@ import play.db.NamedDatabase
 import v1.api.entity.{Category, CategoryCount}
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionHelper._
-import v1.api.implicits.PreparedStatementPlaceHolder._
 import v1.api.implicits.ResultSetHelper._
 
 import scala.concurrent.Future
@@ -16,7 +15,7 @@ import scala.concurrent.Future
 trait CategoryRepository {
   def getById(id: Int): Future[Option[Category]]
 
-  def insertOne(category: Category): Future[Option[Int]]
+  def insertOne(category: Category): Option[Int]
 
   /**
     * Batch insert category and return ids
@@ -47,40 +46,40 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
     }
   }
 
-  override def insertOne(category: Category): Future[Option[Int]] = {
+  override def batchInsert(category: Seq[Category]): Future[Seq[Int]] = {
     Future {
-      database.withConnection {
-        conn =>
-          conn.prepareStatement("select id from final table(insert ignore into category(category) values(?))")
+      category.map {
+        c =>
+          insertOne(c).head
+      }
+    }
+
+  }
+
+  override def insertOne(category: Category): Option[Int] = {
+
+    database.withConnection {
+      conn =>
+        val existsId = conn.prepareStatement("select id from CATEGORY where CATEGORY.CATEGORY=?")
+          .setParams(category.category)
+          .executeQuery()
+          .toLazyList
+          .map(_.getInt("id"))
+          .headOption
+        if (existsId.nonEmpty) {
+          existsId
+        }
+        else {
+          val ps = conn.prepareStatement("insert into category(category) values(?)", Array("id"))
             .setParams(category.category)
-            .executeQuery()
+          ps.executeUpdate()
+          ps.getGeneratedKeys
             .toLazyList
             .map(_.getInt(1))
             .headOption
-      }
-    }
-  }
+        }
 
-  override def batchInsert(category: Seq[Category]): Future[Seq[Int]] = {
-    Future {
-      database.withConnection {
-        conn =>
-          val ps = conn.prepareStatement("insert ignore into category(category) values (?)")
-          category.foreach {
-            c =>
-              ps.setParams(c.category)
-                .addBatch()
-          }
-          ps.executeBatch()
-          conn.prepareStatement(s"select * from category where category in (${category.size.params})")
-            .setInParams(category.map(_.category))
-            .executeQuery()
-            .toLazyList
-            .map(_.getInt("id"))
-            .toList
-      }
     }
-
   }
 
   override def findAll: Future[Seq[CategoryCount]] = Future {

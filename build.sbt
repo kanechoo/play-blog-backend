@@ -12,7 +12,7 @@ lazy val root = (project in file("."))
       "io.lemonlabs" %% "scala-uri" % "1.5.1",
       "net.codingwell" %% "scala-guice" % "4.2.6",
       "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test,
-      "com.h2database" % "h2" % "1.4.200",
+      "com.h2database" % "h2" % "1.4.192",
       jdbc,
       evolutions
     ),

@@ -6,7 +6,6 @@ import play.db.NamedDatabase
 import v1.api.entity.{Tag, TagCount}
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.implicits.ConnectionHelper._
-import v1.api.implicits.PreparedStatementPlaceHolder._
 import v1.api.implicits.ResultSetHelper._
 
 import scala.concurrent.Future
@@ -14,7 +13,7 @@ import scala.concurrent.Future
 trait TagRepository {
   def getById(id: Int): Future[Option[Tag]]
 
-  def insertOne(tag: Tag): Future[Option[Int]]
+  def insertOne(tag: Tag): Option[Int]
 
   def batchInsert(tag: Seq[Tag]): Future[Seq[Int]]
 
@@ -27,7 +26,7 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     Future {
       database.withConnection {
         conn =>
-          conn.prepareStatement("select * from tag where id=?")
+          conn.prepareStatement("select * from tag where id=?", Array("id"))
             .setParams(id)
             .executeQuery()
             .toLazyList
@@ -37,37 +36,37 @@ class TagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(imp
     }
   }
 
-  override def insertOne(tag: Tag): Future[Option[Int]] = {
+  override def batchInsert(tag: Seq[Tag]): Future[Seq[Int]] = {
     Future {
-      database.withConnection {
-        conn =>
-          conn.prepareStatement("select id from final table(insert ignore into tag(tag) values(?))")
-            .setParams(tag.tag)
-            .executeQuery()
-            .toLazyList
-            .map(_.getInt(1))
-            .headOption
+      tag.map {
+        t =>
+          insertOne(t).head
       }
     }
   }
 
-  override def batchInsert(tag: Seq[Tag]): Future[Seq[Int]] = {
-    Future {
-      database.withConnection {
-        conn =>
-          val ps = conn.prepareStatement("insert ignore into tag(tag) values(?)")
-          tag.foreach {
-            t =>
-              ps.setParams(t.tag).addBatch()
-          }
-          ps.executeBatch()
-          conn.prepareStatement(s"select * from TAG where tag in(${tag.length.params})")
-            .setInParams(tag.map(_.tag))
-            .executeQuery()
+  override def insertOne(tag: Tag): Option[Int] = {
+
+    database.withConnection {
+      conn =>
+        val checkExists = conn.prepareStatement("select id from TAG where TAG.TAG=?")
+          .setParams(tag.tag)
+          .executeQuery()
+          .toLazyList
+          .map(_.getInt("id"))
+          .headOption
+        if (checkExists.nonEmpty) {
+          checkExists
+        }
+        else {
+          val ps = conn.prepareStatement("insert into tag(tag) values(?)")
+            .setParams(tag.tag)
+          ps.executeUpdate()
+          ps.getGeneratedKeys
             .toLazyList
-            .map(_.getInt("id"))
-            .toList
-      }
+            .map(_.getInt(1))
+            .headOption
+        }
     }
   }
 

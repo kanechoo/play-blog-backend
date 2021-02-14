@@ -6,14 +6,20 @@ import java.sql.Date
 
 case class Archive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag])
 
+case class PreviousArchive(serialNumber: SerialNumber, title: String)
+
+case class NextArchive(serialNumber: SerialNumber, title: String)
+
+case class FocusArchive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag], previous: PreviousArchive, next: NextArchive)
+
 
 case class Category(serialNumber: SerialNumber, category: String)
 
-case class CategoryCount(category: String, count: Int)
+case class CategoryCount(value: String, count: Int)
 
 case class Tag(serialNumber: SerialNumber, tag: String)
 
-case class TagCount(tag: String, count: Int)
+case class TagCount(value: String, count: Int)
 
 case class ArchiveCategoryRel(archiveId: Int, categoryId: Int)
 
