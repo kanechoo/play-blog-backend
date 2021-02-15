@@ -18,5 +18,6 @@ class Module(environment: Environment, configuration: Configuration)
     bind[TagRepository].to[TagRepositoryImpl]
     bind[ArchiveCategoryRepository].to[ArchiveCategoryRepositoryImpl]
     bind[ArchiveTagRepository].to[ArchiveTagRepositoryImpl]
+    bind[AdminRepository].to[AdminRepositoryImpl]
   }
 }

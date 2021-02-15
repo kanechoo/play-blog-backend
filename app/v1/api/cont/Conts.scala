@@ -1,7 +1,7 @@
 package v1.api.cont
 
-import play.api.libs.json.{Json, OFormat}
-import v1.api.entity.{Archive, CategoryCount, FocusArchive, TagCount}
+import play.api.libs.json.{Format, Json, OFormat}
+import v1.api.entity._
 import v1.api.json.{PageProductWrites, ProductWrites}
 
 object JsonWrites {
@@ -11,6 +11,7 @@ object JsonWrites {
   implicit val focusArchiveWrites: ProductWrites[FocusArchive] = new ProductWrites[FocusArchive]
   implicit val tagCountJsonWrites: OFormat[TagCount] = Json.format[TagCount]
   implicit val categoryCountJsonWrites: OFormat[CategoryCount] = Json.format[CategoryCount]
+  implicit val statusWrites: Format[Status] = Json.format[Status]
 }
 
 object Page {

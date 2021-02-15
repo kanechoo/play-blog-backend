@@ -19,110 +19,117 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
                                      (implicit dataBaseExecuteContext: DataBaseExecuteContext) extends ArchiveRepository {
 
 
-  override def selectById(id: Int): Future[Option[FocusArchive]] = {
-    Future {
-      database.withConnection(conn => {
-        val archive = conn.prepareStatement(selectByIdSql)
-          .setParams(id)
+  override def selectById(id: Int): Future[Option[FocusArchive]] = Future {
+    database.withConnection(conn => {
+      val archive = conn.prepareStatement(selectByIdSql)
+        .setParams(id)
+        .executeQuery()
+        .toLazyList
+        .map(_.asArchive)
+        .headOption
+      if (archive.nonEmpty) {
+        val next = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME < ? order by PUBLISHTIME desc limit 1")
+          .setParams(archive.head.publishTime)
           .executeQuery()
           .toLazyList
-          .map(_.asArchive)
+          .map(res => NextArchive(SerialNumber(res.getInt("id")), res.getString("title")))
           .headOption
-        if (archive.nonEmpty) {
-          val next = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME < ? order by PUBLISHTIME desc limit 1")
-            .setParams(archive.head.publishTime)
-            .executeQuery()
-            .toLazyList
-            .map(res => NextArchive(SerialNumber(res.getInt("id")), res.getString("title")))
-            .headOption
-          val previous = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME > ? order by PUBLISHTIME asc limit 1")
-            .setParams(archive.head.publishTime)
-            .executeQuery()
-            .toLazyList
-            .map(res => PreviousArchive(SerialNumber(res.getInt("id")), res.getString("title")))
-            .headOption
-          val a = archive.get
-          Some(FocusArchive(a.serialNumber, a.title, a.author, a.publishTime, a.content, a.createTime, a.category, a.tag, previous.orNull, next.orNull))
-        }
-        else {
-          None
-        }
-      })
-    }
+        val previous = conn.prepareStatement("select id,title from ARCHIVE where PUBLISHTIME > ? order by PUBLISHTIME asc limit 1")
+          .setParams(archive.head.publishTime)
+          .executeQuery()
+          .toLazyList
+          .map(res => PreviousArchive(SerialNumber(res.getInt("id")), res.getString("title")))
+          .headOption
+        val a = archive.get
+        Some(FocusArchive(a.serialNumber, a.title, a.author, a.publishTime, a.content, a.createTime, a.category, a.tag, previous.orNull, next.orNull))
+      }
+      else {
+        None
+      }
+    })
   }
 
 
-  override def insertOne(archive: Archive): Future[Option[Int]] = {
-    Future {
-      database.withConnection {
-        conn => {
-          val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
-            .setParams(archive.title,
-              archive.author,
-              archive.publishTime,
-              archive.content,
-              archive.createTime)
-          ps.executeUpdate()
-          ps.getGeneratedKeys
-            .toLazyList
-            .map(_.getInt(1))
-            .headOption
-        }
+  override def insertOne(archive: Archive): Future[Option[Int]] = Future {
+    database.withConnection {
+      conn => {
+        val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
+          .setParams(archive.title,
+            archive.author,
+            archive.publishTime,
+            archive.content,
+            archive.createTime)
+        ps.executeUpdate()
+        ps.getGeneratedKeys
+          .toLazyList
+          .map(_.getInt(1))
+          .headOption
       }
     }
   }
 
-  override def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
-    Future {
-      database.withConnection(conn => {
-        val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
+  override def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
+    database.withConnection(conn => {
+      val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
+        .executeQuery()
+        .getRowCount
+        .getOrElse(0L)
+      val params = request.archiveQueryParams
+      val items = conn.prepareStatement(selectSql)
+        .setParams(params.limit, params.offset)
+        .executeQuery()
+        .toLazyList.map(_.asArchive)
+        .toList
+      val page = (params.offset / params.limit) + 1
+      Page(items, page, params.limit, total)
+    })
+  }
+
+  override def selectByCategoryNameOrTagName(name: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
+    database.withConnection {
+      conn =>
+        var totalSql = ""
+        var sql = ""
+        if (request.uri.contains("/tag/")) {
+          sql = selectByTagNameSql
+          totalSql = selectCountByTagNameSql
+        }
+        else if (request.uri.contains("/category/")) {
+          sql = selectByCategoryNameSql
+          totalSql = selectCountByCategoryNameSql
+        }
+        val params = request.archiveQueryParams
+        val total = conn.prepareStatement(totalSql)
+          .setParams(name)
           .executeQuery()
           .getRowCount
           .getOrElse(0L)
-        val params = request.archiveQueryParams
-        val items = conn.prepareStatement(selectSql)
-          .setParams(params.limit, params.offset)
+        val items = conn.prepareStatement(sql)
+          .setParams(name,
+            params.limit,
+            params.offset)
           .executeQuery()
-          .toLazyList.map(_.asArchive)
+          .toLazyList
+          .map(_.asArchive)
           .toList
         val page = (params.offset / params.limit) + 1
         Page(items, page, params.limit, total)
-      })
     }
   }
 
-  override def selectByCategoryNameOrTagName(name: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
-    Future {
-      database.withConnection {
-        conn =>
-          var totalSql = ""
-          var sql = ""
-          if (request.uri.contains("/tag/")) {
-            sql = selectByTagNameSql
-            totalSql = selectCountByTagNameSql
-          }
-          else if (request.uri.contains("/category/")) {
-            sql = selectByCategoryNameSql
-            totalSql = selectCountByCategoryNameSql
-          }
-          val params = request.archiveQueryParams
-          val total = conn.prepareStatement(totalSql)
-            .setParams(name)
-            .executeQuery()
-            .getRowCount
-            .getOrElse(0L)
-          val items = conn.prepareStatement(sql)
-            .setParams(name,
-              params.limit,
-              params.offset)
-            .executeQuery()
-            .toLazyList
-            .map(_.asArchive)
-            .toList
-          val page = (params.offset / params.limit) + 1
-          Page(items, page, params.limit, total)
+  override def deleteById(id: Int): Future[Status] = Future {
+    database.withConnection(
+      conn => {
+        val status = conn.prepareStatement("delete from ARCHIVE where ID=?")
+          .setParams(id)
+          .executeUpdate()
+        if (status == 1) {
+          Status(status, "delete post success")
+        }
+        else
+          Status(status, "delete post fail")
       }
-    }
+    )
   }
 }
 
@@ -132,6 +139,7 @@ trait ArchiveRepository {
   def selectById(id: Int): Future[Option[FocusArchive]]
 
   //def search(key: String): Future[Option[List[Archive]]]
+  def deleteById(id: Int): Future[Status]
 
   def insertOne(archive: Archive): Future[Option[Int]]
 

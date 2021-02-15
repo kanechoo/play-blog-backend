@@ -5,7 +5,7 @@ import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents, ArchiveRequest}
-import v1.api.cont.JsonWrites.{defaultJsonWrites, focusArchiveWrites, pageDefaultJsonWrites}
+import v1.api.cont.JsonWrites.{defaultJsonWrites, focusArchiveWrites, pageDefaultJsonWrites, statusWrites}
 import v1.api.entity.ArchiveForm
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -88,5 +88,13 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
           result =>
             Ok(Json.toJson(result))
         }
+  }
+
+  def deletePostById(id: Int): Action[AnyContent] = ArchiveAction.async {
+    implicit request =>
+      ArchiveHandler.deletePostById(id)
+        .map(status =>
+          Ok(Json.toJson(status))
+        )
   }
 }

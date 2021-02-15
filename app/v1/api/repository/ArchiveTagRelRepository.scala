@@ -1,6 +1,6 @@
 package v1.api.repository
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import play.api.db.Database
 import play.db.NamedDatabase
 import v1.api.entity.ArchiveTagRel
@@ -10,6 +10,7 @@ import v1.api.implicits.ResultSetHelper._
 
 import scala.concurrent.Future
 
+@Singleton
 class ArchiveTagRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)(implicit dataBaseExecuteContext: DataBaseExecuteContext) extends ArchiveTagRepository {
   override def insertOne(archiveTag: ArchiveTagRel): Future[Option[Int]] = {
     Future {

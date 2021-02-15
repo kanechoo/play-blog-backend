@@ -59,4 +59,9 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
     dao.archiveRepository
       .selectByCategoryNameOrTagName(tagName)
   }
+
+  def deletePostById(postId: Int): Future[Status] = {
+    dao.archiveRepository
+      .deleteById(postId)
+  }
 }

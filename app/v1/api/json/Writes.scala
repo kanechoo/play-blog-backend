@@ -16,7 +16,7 @@ class ProductWrites[A <: Product] extends Writes[A] with DefaultWrites {
     p.getClass.getDeclaredFields.foldRight(JsObject.empty) {
       (field, jsonObject) =>
         field.setAccessible(true)
-        val jsonValue = any2JsonValue(field.get(p))
+        val jsonValue = fmt2JsValue(field.get(p))
         jsonObject + (field.getName, jsonValue)
     }
   }
@@ -28,8 +28,11 @@ class ProductWrites[A <: Product] extends Writes[A] with DefaultWrites {
     }
   }
 
-  def any2JsonValue(any: Any): JsValue = any match {
-    case _: Int | Long | Float | Double => JsNumber(any.asInstanceOf[Int])
+  def fmt2JsValue(any: Any): JsValue = any match {
+    case _: Int => JsNumber(any.asInstanceOf[Int])
+    case _: Long => JsNumber(any.asInstanceOf[Long])
+    case _: Float => JsNumber(any.asInstanceOf[Float])
+    case _: Double => JsNumber(any.asInstanceOf[Double])
     case _: String => JsString(any.asInstanceOf[String])
     case serialNumber: SerialNumber => JsNumber(serialNumber.id)
     case sqlDate: Date => JsNumber(sqlDate.asInstanceOf[Date].getTime)
