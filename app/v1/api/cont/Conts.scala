@@ -11,7 +11,7 @@ object JsonWrites {
   implicit val focusArchiveWrites: ProductWrites[FocusArchive] = new ProductWrites[FocusArchive]
   implicit val tagCountJsonWrites: OFormat[TagCount] = Json.format[TagCount]
   implicit val categoryCountJsonWrites: OFormat[CategoryCount] = Json.format[CategoryCount]
-  implicit val statusWrites: Format[Status] = Json.format[Status]
+  implicit val statusWrites: Format[ResponseMessage] = Json.format[ResponseMessage]
 }
 
 object Page {

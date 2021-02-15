@@ -4,7 +4,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
-import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents, ArchiveRequest}
+import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents}
 import v1.api.cont.JsonWrites.{defaultJsonWrites, focusArchiveWrites, pageDefaultJsonWrites, statusWrites}
 import v1.api.entity.ArchiveForm
 
@@ -57,19 +57,11 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
 
   def findArchives: Action[AnyContent] = ArchiveAction.async {
     implicit request =>
-      printMessage
       ArchiveHandler.selectArchive()
         .map {
           result =>
             Ok(Json.toJson(result))
         }
-  }
-
-  def printMessage(implicit request: ArchiveRequest[AnyContent]): Unit = {
-    println(s"message:${request.messagesApi.messages}")
-    println(s"queryString:${request.queryString}")
-    println(s"mediaType:${request.mediaType}")
-    println(s"path:${request.path}")
   }
 
   def findByCategoryName(categoryName: String): Action[AnyContent] = ArchiveAction.async {

@@ -117,17 +117,17 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def deleteById(id: Int): Future[Status] = Future {
+  override def deleteById(id: Int): Future[ResponseMessage] = Future {
     database.withConnection(
       conn => {
         val status = conn.prepareStatement("delete from ARCHIVE where ID=?")
           .setParams(id)
           .executeUpdate()
         if (status == 1) {
-          Status(status, "delete post success")
+          ResponseMessage(status, "delete post success")
         }
         else
-          Status(status, "delete post fail")
+          ResponseMessage(status, "delete post fail")
       }
     )
   }
@@ -139,7 +139,7 @@ trait ArchiveRepository {
   def selectById(id: Int): Future[Option[FocusArchive]]
 
   //def search(key: String): Future[Option[List[Archive]]]
-  def deleteById(id: Int): Future[Status]
+  def deleteById(id: Int): Future[ResponseMessage]
 
   def insertOne(archive: Archive): Future[Option[Int]]
 

@@ -1,3 +1,4 @@
 ->        /v1/api/archive         v1.api.router.ArchiveRouter
 ->        /v1/api/category        v1.api.router.CategoryRouter
 ->        /v1/api/tag             v1.api.router.TagRouter
+->        /v1/api/owner/          v1.api.router.AdminRouter

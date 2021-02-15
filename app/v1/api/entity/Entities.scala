@@ -24,7 +24,7 @@ case class ArchiveCategoryRel(archiveId: Int, categoryId: Int)
 
 case class ArchiveTagRel(archiveId: Int, tagId: Int)
 
-case class Status(status: Int, message: String)
+case class ResponseMessage(status: Int, message: String)
 
 case class Account(serialNumber: SerialNumber, username: String, password: String)
 
