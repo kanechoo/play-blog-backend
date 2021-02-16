@@ -1,6 +1,7 @@
 import com.google.inject.AbstractModule
 import net.codingwell.scalaguice.ScalaModule
 import play.api.{Configuration, Environment}
+import support.hexo.{MdReader, MdReaderImpl}
 import v1.api.repository._
 
 /**
@@ -19,5 +20,6 @@ class Module(environment: Environment, configuration: Configuration)
     bind[ArchiveCategoryRepository].to[ArchiveCategoryRepositoryImpl]
     bind[ArchiveTagRepository].to[ArchiveTagRepositoryImpl]
     bind[AdminRepository].to[AdminRepositoryImpl]
+    bind[MdReader].to[MdReaderImpl]
   }
 }

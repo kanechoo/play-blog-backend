@@ -1,6 +1,6 @@
 package v1.api.handler
 
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.AnyContent
 import v1.api.action.ArchiveRequest
@@ -10,29 +10,30 @@ import v1.api.repository.Repositories
 
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext) {
   val log: Logger = Logger(getClass)
 
-  def createArchive(form: ArchiveForm): Future[Archive] = {
+  def createArchive(archive: Archive): Future[Archive] = {
 
-    dao.archiveRepository.insertOne(form.getArchiveFormData)
+    dao.archiveRepository.insertOne(archive)
       .map(aId => {
         log.debug(s"inserted archive id : $aId")
-        dao.categoryRepository.batchInsert(form.category)
+        dao.categoryRepository.batchInsert(archive.category)
           .map {
             cIds =>
               log.debug(s"inserted category ids : $cIds")
               dao.archiveCategoryRepository
                 .batchInsert(cIds.map(ArchiveCategoryRel(aId.get, _)))
           }
-        dao.tagRepository.batchInsert(form.tag)
+        dao.tagRepository.batchInsert(archive.tag)
           .map {
             tIds =>
               log.debug(s"inserted tag ids : $tIds")
               dao.archiveTagRepository
                 .batchInsert(tIds.map(ArchiveTagRel(aId.get, _)))
           }
-        form.getArchiveFormData
+        archive
       })
   }
 

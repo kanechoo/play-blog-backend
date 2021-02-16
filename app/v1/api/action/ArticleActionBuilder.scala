@@ -27,7 +27,7 @@ class ArchiveActionBuilder @Inject()(playBodyParsers: PlayBodyParsers, messagesA
       .map(result => {
         request.method match {
           case GET | HEAD =>
-            result.withHeaders("Cache-Control" -> s"max-age: 100")
+            result
           case POST =>
             result
           case _ =>

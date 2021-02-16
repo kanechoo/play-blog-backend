@@ -1,7 +1,7 @@
 import sbt.Keys._
 
 lazy val root = (project in file("."))
-  .enablePlugins(PlayService, PlayLayoutPlugin, Common)
+  .enablePlugins(PlayService, PlayLayoutPlugin, Common, PlayScala)
   .settings(
     name := "play-blog-backend",
     scalaVersion := "2.13.4",

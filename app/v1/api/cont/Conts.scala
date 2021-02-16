@@ -14,6 +14,12 @@ object JsonWrites {
   implicit val statusWrites: Format[ResponseMessage] = Json.format[ResponseMessage]
 }
 
+object Default {
+  val defaultCategory = "unknownCategory"
+  val defaultTag = "unknownTag"
+  val defaultSerialNumber: SerialNumber = SerialNumber(0)
+}
+
 object Page {
 
   val page = "page"

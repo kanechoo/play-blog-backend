@@ -27,7 +27,7 @@ class AdminController @Inject()(cc: ControllerComponents, adminRepository: Admin
             .map {
               res =>
                 if (1 == res.status) {
-                  Ok(Json.toJson(res)).withSession(request.session + ("username" -> username.head.head))
+                  Ok(Json.toJson(res)).withSession("username" -> username.head.head)
                 }
                 else
                   Ok(Json.toJson(res))

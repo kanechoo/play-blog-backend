@@ -36,7 +36,7 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
           }
         },
         (archiveForm: ArchiveForm) => {
-          ArchiveHandler.createArchive(archiveForm)
+          ArchiveHandler.createArchive(archiveForm.getArchiveFormData)
             .map {
               archive =>
                 Created(Json.toJson(archive))
