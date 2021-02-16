@@ -48,9 +48,11 @@ class CategoryRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database
 
   override def batchInsert(category: Seq[Category]): Future[Seq[Int]] = {
     Future {
-      category.map {
-        c =>
-          insertOne(c).head
+      this.synchronized {
+        category.map {
+          c =>
+            insertOne(c).head
+        }
       }
     }
 

@@ -15,8 +15,8 @@ object JsonWrites {
 }
 
 object Default {
-  val defaultCategory = "unknownCategory"
-  val defaultTag = "unknownTag"
+  val defaultCategory = "未分类"
+  val defaultTag = "未分类"
   val defaultSerialNumber: SerialNumber = SerialNumber(0)
 }
 
@@ -30,7 +30,7 @@ object Page {
 
   val data = "list"
   val totalPage = "totalPage"
-  val maxItemSize = 5
+  val maxItemSize = 4
 }
 
 object Entities {

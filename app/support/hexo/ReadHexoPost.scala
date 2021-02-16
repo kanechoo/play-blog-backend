@@ -33,41 +33,46 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
           val buffer = Source.fromFile(file, "utf-8")
           val content = buffer.mkString
           buffer.close()
-          (file.getName, content.trim)
+          (file.getName.replaceAll("\\.(.*)", ""), content.trim)
       }
       .map {
         tuple =>
-          val exceptHeaderContent = tuple._2.substring(tuple._2.lastIndexOf("---") + 3)
           val sdf = new SimpleDateFormat("yyyy-MM-dd")
-          val header = parseMdTitle(tuple._2)
+          val s = splitHeaderContent(tuple._2)
+          val header = parseMdTitle(s._1)
           val publishDateTime = sdf.parse(header.getOrElse("date", sdf.format(System.currentTimeMillis()))).getTime
-          var categories = header.getOrElse("categories", "").split(",")
-            .map {
+          val categories = header.getOrElse("categories", "").trim
+          val tags = header.getOrElse("tags", "").trim
+          var cs = Seq(Category(defaultSerialNumber, defaultTag))
+          var ts = Seq(Tag(defaultSerialNumber, defaultTag))
+          if (categories.nonEmpty) {
+            cs = categories.split(",").map {
               e =>
-                Category(SerialNumber(0), e)
+                Category(defaultSerialNumber, e)
             }.toSeq
-          var tags = header.getOrElse("tags", "").split(",")
-            .map {
-              e =>
-                Tag(SerialNumber(0), e)
-            }.toSeq
-          if (null == categories || categories.isEmpty) categories = Seq(Category(defaultSerialNumber, defaultCategory))
-          if (null == tags || tags.isEmpty) tags = Seq(Tag(defaultSerialNumber, defaultTag))
+          }
+          if (tags.nonEmpty) {
+            ts = tags.split(",")
+              .map {
+                e =>
+                  Tag(defaultSerialNumber, e)
+              }.toSeq
+          }
           val title = header.getOrElse("title", tuple._1)
           val author = header.getOrElse("author", "konc")
           log.debug("title : " + title)
           log.debug("author : " + author)
-          log.debug("content : " + exceptHeaderContent)
+          log.debug("content : " + s._2)
           log.debug("categories : " + categories)
           log.debug("tags : " + tags)
           Archive(SerialNumber(0),
             title,
             author,
             new Date(publishDateTime),
-            exceptHeaderContent,
+            s._2,
             new Date(System.currentTimeMillis()),
-            categories,
-            tags
+            cs,
+            ts
           )
       }.toSeq
     archives.map {
@@ -77,10 +82,9 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
   }
 
   def parseMdTitle(content: String): Map[String, String] = {
-    if (content.nonEmpty && content.startsWith("---")) {
+    if (content.nonEmpty && content.indexOf("---") != content.lastIndexOf("---")) {
       val keyPairPattern = "\\w+?:\\s*.*\\n"
-      val end = content.lastIndexOf("---")
-      val matchContent = content.substring(0, end + 3).replaceAll(" ", "")
+      val matchContent = content.replaceAll("---", "").replaceAll(" ", "")
       var result: Map[String, String] = Map()
       val it = keyPairPattern.r.findAllIn(matchContent)
       it.foreach {
@@ -97,6 +101,19 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
       result
     }
     else Map()
+  }
+
+  def splitHeaderContent(s: String): (String, String) = {
+    val ss = s.trim
+    if (!ss.startsWith("---") && ss.length < 7)
+      ("", ss)
+    else {
+      val sss = ss.drop(3)
+      val endIndex = sss.indexOf("---") + 6
+      val hexoHeader = ss.substring(0, endIndex)
+      val content = ss.drop(endIndex)
+      (hexoHeader, content)
+    }
   }
 }
 
