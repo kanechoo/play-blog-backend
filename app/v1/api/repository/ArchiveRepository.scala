@@ -53,6 +53,12 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def insertOne(archive: Archive): Future[Option[Int]] = Future {
     database.withConnection {
       conn => {
+        val checkExists = conn.prepareStatement("select id from ARCHIVE where TITLE=?")
+          .setParams(archive.title)
+          .executeQuery()
+          .toLazyList
+          .headOption
+        if (checkExists.nonEmpty) None
         val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
           .setParams(archive.title,
             archive.author,
@@ -68,53 +74,19 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
+  override def list(params: ArchiveQueryParams): Future[Page[Archive]] = Future {
     database.withConnection(conn => {
       val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
         .executeQuery()
         .getRowCount
         .getOrElse(0L)
-      val params = request.archiveQueryParams
       val items = conn.prepareStatement(selectSql)
         .setParams(params.limit, params.offset)
         .executeQuery()
         .toLazyList.map(_.asArchive)
         .toList
-      val page = (params.offset / params.limit) + 1
-      Page(items, page, params.limit, total)
+      Page(items, params.page, params.limit, total)
     })
-  }
-
-  override def selectByCategoryNameOrTagName(name: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
-    database.withConnection {
-      conn =>
-        var totalSql = ""
-        var sql = ""
-        if (request.uri.contains("/tag/")) {
-          sql = selectByTagNameSql
-          totalSql = selectCountByTagNameSql
-        }
-        else if (request.uri.contains("/category/")) {
-          sql = selectByCategoryNameSql
-          totalSql = selectCountByCategoryNameSql
-        }
-        val params = request.archiveQueryParams
-        val total = conn.prepareStatement(totalSql)
-          .setParams(name)
-          .executeQuery()
-          .getRowCount
-          .getOrElse(0L)
-        val items = conn.prepareStatement(sql)
-          .setParams(name,
-            params.limit,
-            params.offset)
-          .executeQuery()
-          .toLazyList
-          .map(_.asArchive)
-          .toList
-        val page = (params.offset / params.limit) + 1
-        Page(items, page, params.limit, total)
-    }
   }
 
   override def deleteById(id: Int): Future[ResponseMessage] = Future {
@@ -131,10 +103,52 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
       }
     )
   }
+
+  override def selectByCategory(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
+    database.withConnection {
+      conn =>
+        import request.archiveQueryParams._
+        val total = conn.prepareStatement(selectCountByCategoryNameSql)
+          .setParams(categoryName)
+          .executeQuery()
+          .getRowCount
+          .getOrElse(0L)
+        val items = conn.prepareStatement(selectByCategoryNameSql)
+          .setParams(categoryName,
+            limit,
+            offset)
+          .executeQuery()
+          .toLazyList
+          .map(_.asArchive)
+          .toList
+        Page(items, page, limit, total)
+    }
+  }
+
+  override def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
+    database.withConnection {
+      conn =>
+        import request.archiveQueryParams._
+        val total = conn.prepareStatement(selectCountByTagNameSql)
+          .setParams(tagName)
+          .executeQuery()
+          .getRowCount
+          .getOrElse(0L)
+        val items = conn.prepareStatement(selectByTagNameSql)
+          .setParams(tagName,
+            limit,
+            offset)
+          .executeQuery()
+          .toLazyList
+          .map(_.asArchive)
+          .toList
+        Page(items, page, limit, total)
+    }
+  }
 }
 
 trait ArchiveRepository {
-  def list()(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
+  def list(params: ArchiveQueryParams): Future[Page[Archive]]
 
   def selectById(id: Int): Future[Option[FocusArchive]]
 
@@ -143,5 +157,7 @@ trait ArchiveRepository {
 
   def insertOne(archive: Archive): Future[Option[Int]]
 
-  def selectByCategoryNameOrTagName(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
+  def selectByCategory(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
+
+  def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 }

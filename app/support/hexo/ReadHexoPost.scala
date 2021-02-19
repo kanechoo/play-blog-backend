@@ -2,8 +2,14 @@ package support.hexo
 
 import akka.actor.ActorSystem
 import com.google.inject.{Inject, Singleton}
+import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension
+import com.vladsch.flexmark.ext.tables.TablesExtension
+import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.data.{DataKey, MutableDataSet}
+import com.vladsch.flexmark.util.misc.Extension
 import play.api.Logger
-import v1.api.cont.Default._
+import v1.api.cont.DefaultValues._
 import v1.api.entity.{Archive, Category, SerialNumber, Tag}
 import v1.api.execute.DataBaseExecuteContext
 import v1.api.handler.ArchiveHandler
@@ -45,6 +51,7 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
           val tags = header.getOrElse("tags", "").trim
           var cs = Seq(Category(defaultSerialNumber, defaultTag))
           var ts = Seq(Tag(defaultSerialNumber, defaultTag))
+          val htmlContent = parseMd2Html(s._2)
           if (categories.nonEmpty) {
             cs = categories.split(",").map {
               e =>
@@ -69,7 +76,7 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
             title,
             author,
             new Date(publishDateTime),
-            s._2,
+            htmlContent,
             new Date(System.currentTimeMillis()),
             cs,
             ts
@@ -114,6 +121,16 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
       val content = ss.drop(endIndex)
       (hexoHeader, content)
     }
+  }
+
+  def parseMd2Html(s: String): String = {
+    val options = new MutableDataSet()
+    options.set(new DataKey[List[Extension]]("EXTENSIONS", List()), List(TablesExtension.create(), StrikethroughExtension.create()))
+    options.set(HtmlRenderer.SOFT_BREAK, "<br />\n")
+    val parser = Parser.builder(options).build()
+    val htmlRender = HtmlRenderer.builder(options).build()
+    val mdDoc = parser.parse(s)
+    htmlRender.render(mdDoc)
   }
 }
 

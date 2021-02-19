@@ -13,6 +13,7 @@ lazy val root = (project in file("."))
       "net.codingwell" %% "scala-guice" % "4.2.6",
       "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test,
       "com.h2database" % "h2" % "1.4.192",
+      "com.vladsch.flexmark" % "flexmark-all" % "0.62.2",
       jdbc,
       evolutions
     ),

@@ -5,14 +5,14 @@ import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v1.api.action.{ArchiveBaseController, ArchiveControllerComponents}
-import v1.api.cont.JsonWrites.{defaultJsonWrites, focusArchiveWrites, pageDefaultJsonWrites, statusWrites}
+import v1.api.cont.JsonWrites
 import v1.api.entity.ArchiveForm
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec: ExecutionContext)
-  extends ArchiveBaseController(acc) {
+  extends ArchiveBaseController(acc) with JsonWrites {
   private val form: Form[ArchiveForm] = {
     import play.api.data.Forms._
     Form(
@@ -57,7 +57,7 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
 
   def findArchives: Action[AnyContent] = ArchiveAction.async {
     implicit request =>
-      ArchiveHandler.selectArchive()
+      ArchiveHandler.selectArchive(request.archiveQueryParams)
         .map {
           result =>
             Ok(Json.toJson(result))

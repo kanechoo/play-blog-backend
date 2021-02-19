@@ -174,8 +174,17 @@ object RequestHandler {
       val limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some("5")).head))
       val offset = (Math.max(1, Integer.parseInt(request.getQueryString("page").orElse(Some("1")).head)) - 1) * limit
       val order = request.getQueryString("order")
-      ArchiveQueryParams(offset, limit, order)
+      val page = (offset / limit) + 1
+      var category: Option[String] = None
+      var tag: Option[String] = None
+      val c = "/category/.+".r.findAllIn(request.uri)
+        .iterator.nextOption()
+      if (c.nonEmpty) category = Some(request.uri.drop("/category/".length))
+      val t = "/tag/.+".r.findAllIn(request.uri).iterator.nextOption()
+      if (t.nonEmpty) tag = Some(request.uri.drop("/tag/".length))
+      ArchiveQueryParams(offset, page, limit, category, tag, order)
     }
+
   }
 
 }

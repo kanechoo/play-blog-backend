@@ -3,13 +3,13 @@ package v1.api.controller
 import com.google.inject.Inject
 import play.api.libs.json.Json
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
-import v1.api.cont.JsonWrites.statusWrites
+import v1.api.cont.JsonWrites
 import v1.api.entity.ResponseMessage
 import v1.api.repository.AdminRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AdminController @Inject()(cc: ControllerComponents, adminRepository: AdminRepository)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+class AdminController @Inject()(cc: ControllerComponents, adminRepository: AdminRepository)(implicit ec: ExecutionContext) extends AbstractController(cc) with JsonWrites {
   def signIn: Action[AnyContent] = Action.async {
     implicit request =>
       val data = request.body.asMultipartFormData

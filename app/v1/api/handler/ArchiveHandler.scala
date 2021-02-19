@@ -44,8 +44,8 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       }
   }
 
-  def selectArchive()(implicit archiveRequest: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
-    dao.archiveRepository.list().map {
+  def selectArchive(params: ArchiveQueryParams): Future[Page[Archive]] = {
+    dao.archiveRepository.list(params).map {
       result =>
         result
     }
@@ -53,12 +53,12 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
 
   def selectByCategoryName(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
     dao.archiveRepository
-      .selectByCategoryNameOrTagName(categoryName)
+      .selectByCategory(categoryName)
   }
 
   def selectByTagName(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = {
     dao.archiveRepository
-      .selectByCategoryNameOrTagName(tagName)
+      .selectByTag(tagName)
   }
 
   def deletePostById(postId: Int): Future[ResponseMessage] = {

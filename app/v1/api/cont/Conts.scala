@@ -4,17 +4,16 @@ import play.api.libs.json.{Format, Json, OFormat}
 import v1.api.entity._
 import v1.api.json.{PageProductWrites, ProductWrites}
 
-object JsonWrites {
-
-  implicit val defaultJsonWrites: ProductWrites[Archive] = new ProductWrites[Archive]
-  implicit val pageDefaultJsonWrites: PageProductWrites[Archive] = new PageProductWrites[Archive]
+trait JsonWrites {
+  implicit val archiveJsonWrites: ProductWrites[Archive] = new ProductWrites[Archive]
+  implicit val pageArchiveWrites: PageProductWrites[Archive] = new PageProductWrites[Archive]
   implicit val focusArchiveWrites: ProductWrites[FocusArchive] = new ProductWrites[FocusArchive]
   implicit val tagCountJsonWrites: OFormat[TagCount] = Json.format[TagCount]
   implicit val categoryCountJsonWrites: OFormat[CategoryCount] = Json.format[CategoryCount]
   implicit val statusWrites: Format[ResponseMessage] = Json.format[ResponseMessage]
 }
 
-object Default {
+object DefaultValues {
   val defaultCategory = "未分类"
   val defaultTag = "未分类"
   val defaultSerialNumber: SerialNumber = SerialNumber(0)
