@@ -89,4 +89,13 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
           Ok(Json.toJson(status))
         )
   }
+
+  def timeline: Action[AnyContent] = ArchiveAction.async {
+    implicit request =>
+      ArchiveHandler.timeline(request.archiveQueryParams)
+        .map {
+          result =>
+            Ok(Json.toJson(result))
+        }
+  }
 }

@@ -23,6 +23,8 @@ class ArchiveRouter @Inject()(ac: ArchiveController) extends SimpleRouter {
       ac.createNewArchive
     case GET(p"/") =>
       ac.findArchives
+    case GET(p"/timeline") =>
+      ac.timeline
     case GET(p"/$id") =>
       ac.findById(Integer.parseInt(id))
   }

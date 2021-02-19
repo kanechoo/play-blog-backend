@@ -171,7 +171,7 @@ object RequestHandler {
 
   implicit class BindRequest(request: RequestHeader) {
     def bindRequestQueryString: ArchiveQueryParams = {
-      val limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some("5")).head))
+      var limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some("5")).head))
       val offset = (Math.max(1, Integer.parseInt(request.getQueryString("page").orElse(Some("1")).head)) - 1) * limit
       val order = request.getQueryString("order")
       val page = (offset / limit) + 1
@@ -182,6 +182,7 @@ object RequestHandler {
       if (c.nonEmpty) category = Some(request.uri.drop("/category/".length))
       val t = "/tag/.+".r.findAllIn(request.uri).iterator.nextOption()
       if (t.nonEmpty) tag = Some(request.uri.drop("/tag/".length))
+      if (request.uri.indexOf("timeline") > 0) limit = 8
       ArchiveQueryParams(offset, page, limit, category, tag, order)
     }
 

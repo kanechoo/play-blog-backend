@@ -11,6 +11,7 @@ trait JsonWrites {
   implicit val tagCountJsonWrites: OFormat[TagCount] = Json.format[TagCount]
   implicit val categoryCountJsonWrites: OFormat[CategoryCount] = Json.format[CategoryCount]
   implicit val statusWrites: Format[ResponseMessage] = Json.format[ResponseMessage]
+  implicit val timelineWrites: PageProductWrites[Timeline] = new PageProductWrites[Timeline]
 }
 
 object DefaultValues {

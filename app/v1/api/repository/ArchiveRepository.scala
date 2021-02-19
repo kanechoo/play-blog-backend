@@ -12,6 +12,7 @@ import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.ResultSetHelper._
 import v1.api.page.Page
 
+import java.text.SimpleDateFormat
 import scala.concurrent.Future
 
 @Singleton
@@ -53,23 +54,28 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
   override def insertOne(archive: Archive): Future[Option[Int]] = Future {
     database.withConnection {
       conn => {
-        val checkExists = conn.prepareStatement("select id from ARCHIVE where TITLE=?")
+        val checkExists = conn.prepareStatement("select id from ARCHIVE where ARCHIVE.TITLE=?")
           .setParams(archive.title)
           .executeQuery()
           .toLazyList
+          .toList
           .headOption
-        if (checkExists.nonEmpty) None
-        val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
-          .setParams(archive.title,
-            archive.author,
-            archive.publishTime,
-            archive.content,
-            archive.createTime)
-        ps.executeUpdate()
-        ps.getGeneratedKeys
-          .toLazyList
-          .map(_.getInt(1))
-          .headOption
+        if (checkExists.nonEmpty || checkExists.isDefined) {
+          None
+        }
+        else {
+          val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
+            .setParams(archive.title,
+              archive.author,
+              archive.publishTime,
+              archive.content,
+              archive.createTime)
+          ps.executeUpdate()
+          ps.getGeneratedKeys
+            .toLazyList
+            .map(_.getInt(1))
+            .headOption
+        }
       }
     }
   }
@@ -85,7 +91,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
         .executeQuery()
         .toLazyList.map(_.asArchive)
         .toList
-      Page(items, params.page, params.limit, total)
+      Page(items, params.page, params.limit, total, countTotalPage(total, params.limit))
     })
   }
 
@@ -121,8 +127,12 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .toLazyList
           .map(_.asArchive)
           .toList
-        Page(items, page, limit, total)
+        Page(items, page, limit, total, countTotalPage(total, limit))
     }
+  }
+
+  def countTotalPage(total: Long, limit: Int): Int = {
+    (total.toInt / limit).toInt + (if (total.toInt % limit == 0) 0 else 1)
   }
 
   override def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
@@ -142,8 +152,29 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .toLazyList
           .map(_.asArchive)
           .toList
-        Page(items, page, limit, total)
+        val totalPage = total / limit + 1
+        Page(items, page, limit, total, countTotalPage(total, limit))
     }
+  }
+
+  override def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = Future {
+    database.withConnection(conn => {
+      val sdf = new SimpleDateFormat("yyyy/MM/dd")
+      val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
+        .executeQuery()
+        .getRowCount
+        .getOrElse(0L)
+      val items = conn.prepareStatement(selectSql)
+        .setParams(params.limit, params.offset)
+        .executeQuery()
+        .toLazyList.map(_.asArchive)
+        .map {
+          a =>
+            Timeline(a.serialNumber, a.title, sdf.format(a.publishTime), a.category, a.tag)
+        }
+        .toList
+      Page(items, params.page, params.limit, total, countTotalPage(total, params.limit))
+    })
   }
 }
 
@@ -160,4 +191,6 @@ trait ArchiveRepository {
   def selectByCategory(categoryName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 
   def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
+
+  def timeline(params: ArchiveQueryParams): Future[Page[Timeline]]
 }

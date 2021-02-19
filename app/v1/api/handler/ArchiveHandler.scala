@@ -65,4 +65,10 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
     dao.archiveRepository
       .deleteById(postId)
   }
+
+  def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = {
+    dao.archiveRepository
+      .timeline(params)
+
+  }
 }

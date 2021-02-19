@@ -26,6 +26,8 @@ case class ArchiveTagRel(archiveId: Int, tagId: Int)
 
 case class ResponseMessage(status: Int, message: String)
 
+case class Timeline(serialNumber: SerialNumber, title: String, time: String, category: Seq[Category], tag: Seq[Tag])
+
 case class Account(serialNumber: SerialNumber, username: String, password: String)
 
 trait ArchiveQueryHandler {
