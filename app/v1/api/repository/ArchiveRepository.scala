@@ -42,7 +42,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .map(res => PreviousArchive(SerialNumber(res.getInt("id")), res.getString("title")))
           .headOption
         val a = archive.get
-        Some(FocusArchive(a.serialNumber, a.title, a.author, a.publishTime, a.content, a.createTime, a.category, a.tag, previous.orNull, next.orNull))
+        Some(FocusArchive(a.serialNumber, a.title, a.author, a.publishTime, a.content, a.createTime, a.category, a.tag, a.catalog, previous.orNull, next.orNull))
       }
       else {
         None
@@ -64,12 +64,13 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           None
         }
         else {
-          val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime) values (?,?,?,?,?)", Array("id"))
+          val ps = conn.prepareStatement("insert into Archive(title,author,publishTime,content,createTime,catalog) values (?,?,?,?,?,?)", Array("id"))
             .setParams(archive.title,
               archive.author,
               archive.publishTime,
               archive.content,
-              archive.createTime)
+              archive.createTime,
+              archive.catalog)
           ps.executeUpdate()
           ps.getGeneratedKeys
             .toLazyList
@@ -131,10 +132,6 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  def countTotalPage(total: Long, limit: Int): Int = {
-    (total.toInt / limit).toInt + (if (total.toInt % limit == 0) 0 else 1)
-  }
-
   override def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
     database.withConnection {
       conn =>
@@ -152,9 +149,12 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .toLazyList
           .map(_.asArchive)
           .toList
-        val totalPage = total / limit + 1
         Page(items, page, limit, total, countTotalPage(total, limit))
     }
+  }
+
+  def countTotalPage(total: Long, limit: Int): Int = {
+    (total.toInt / limit) + (if (total.toInt % limit == 0) 0 else 1)
   }
 
   override def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = Future {
@@ -170,7 +170,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
         .toLazyList.map(_.asArchive)
         .map {
           a =>
-            Timeline(a.serialNumber, a.title, sdf.format(a.publishTime), a.category, a.tag)
+            Timeline(a.serialNumber, a.title, a.publishTime.getTime, a.category, a.tag)
         }
         .toList
       Page(items, params.page, params.limit, total, countTotalPage(total, params.limit))

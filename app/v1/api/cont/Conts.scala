@@ -55,6 +55,7 @@ object Entities {
     val content = "content"
 
     val createTime = "createTime"
+    val catalog = "catalog"
   }
 
   object CategoryField {

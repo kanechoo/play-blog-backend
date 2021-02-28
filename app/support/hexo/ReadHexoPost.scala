@@ -2,13 +2,12 @@ package support.hexo
 
 import akka.actor.ActorSystem
 import com.google.inject.{Inject, Singleton}
-import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension
-import com.vladsch.flexmark.ext.tables.TablesExtension
 import com.vladsch.flexmark.html.HtmlRenderer
-import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.parser.{Parser, PegdownExtensions}
+import com.vladsch.flexmark.profile.pegdown.PegdownOptionsAdapter
 import com.vladsch.flexmark.util.data.{DataKey, MutableDataSet}
-import com.vladsch.flexmark.util.misc.Extension
 import play.api.Logger
+import util.CatalogUtil
 import v1.api.cont.DefaultValues._
 import v1.api.entity.{Archive, Category, SerialNumber, Tag}
 import v1.api.execute.DataBaseExecuteContext
@@ -51,7 +50,7 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
           val tags = header.getOrElse("tags", "").trim
           var cs = Seq(Category(defaultSerialNumber, defaultTag))
           var ts = Seq(Tag(defaultSerialNumber, defaultTag))
-          val htmlContent = parseMd2Html(s._2)
+          val mdMap = parseMd2Html(s._2)
           if (categories.nonEmpty) {
             cs = categories.split(",").map {
               e =>
@@ -76,10 +75,11 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
             title,
             author,
             new Date(publishDateTime),
-            htmlContent,
+            mdMap.get("content").orNull,
             new Date(System.currentTimeMillis()),
             cs,
-            ts
+            ts,
+            mdMap.get("toc").orNull
           )
       }.toSeq
     archives.map {
@@ -112,7 +112,7 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
 
   def splitHeaderContent(s: String): (String, String) = {
     val ss = s.trim
-    if (!ss.startsWith("---") && ss.length < 7)
+    if (!ss.startsWith("---") || ss.length < 7)
       ("", ss)
     else {
       val sss = ss.drop(3)
@@ -123,14 +123,19 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
     }
   }
 
-  def parseMd2Html(s: String): String = {
+  def parseMd2Html(mdContent: String): Map[String, String] = {
     val options = new MutableDataSet()
-    options.set(new DataKey[List[Extension]]("EXTENSIONS", List()), List(TablesExtension.create(), StrikethroughExtension.create()))
+    val allOptions = PegdownOptionsAdapter.flexmarkOptions(PegdownExtensions.ALL).toMutable
+    options.setAll(allOptions)
     options.set(HtmlRenderer.SOFT_BREAK, "<br />\n")
+    options.set(new DataKey[Boolean]("GENERATE_HEADER_ID", true), true)
+    options.set(new DataKey[Boolean]("RENDER_HEADER_ID", true), true)
     val parser = Parser.builder(options).build()
     val htmlRender = HtmlRenderer.builder(options).build()
-    val mdDoc = parser.parse(s)
-    htmlRender.render(mdDoc)
+    val mdDoc = parser.parse(mdContent)
+    val mdHtml = htmlRender.render(mdDoc)
+    val tocHtml = CatalogUtil.parseHtml2Catalog(mdHtml, 3)
+    Map("content" -> mdHtml, "toc" -> tocHtml)
   }
 }
 

@@ -8,6 +8,7 @@ CREATE TABLE if not exists `archive`
     `publishTime` DATETIME     NOT NULL COMMENT 'publish time',
     `content`     LONGTEXT     NOT NULL COMMENT 'post content',
     `createTime`  DATETIME     NOT NULL COMMENT 'post created time',
+    `catalog`     TINYTEXT     NULL COMMENT 'post directory',
     PRIMARY KEY (`id`)
 );
 --Category Schema

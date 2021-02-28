@@ -4,13 +4,13 @@ import v1.api.cont.Entities._
 
 import java.sql.Date
 
-case class Archive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag])
+case class Archive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag], catalog: String)
 
 case class PreviousArchive(serialNumber: SerialNumber, title: String)
 
 case class NextArchive(serialNumber: SerialNumber, title: String)
 
-case class FocusArchive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag], previous: PreviousArchive, next: NextArchive)
+case class FocusArchive(serialNumber: SerialNumber, title: String, author: String, publishTime: Date, content: String, createTime: Date, category: Seq[Category], tag: Seq[Tag], catalog: String, previous: PreviousArchive, next: NextArchive)
 
 case class Category(serialNumber: SerialNumber, category: String)
 
@@ -26,9 +26,11 @@ case class ArchiveTagRel(archiveId: Int, tagId: Int)
 
 case class ResponseMessage(status: Int, message: String)
 
-case class Timeline(serialNumber: SerialNumber, title: String, time: String, category: Seq[Category], tag: Seq[Tag])
+case class Timeline(serialNumber: SerialNumber, title: String, time: Long, category: Seq[Category], tag: Seq[Tag])
 
 case class Account(serialNumber: SerialNumber, username: String, password: String)
+
+case class CatalogMeta(depth: Int, aTag: String)
 
 trait ArchiveQueryHandler {
   def archiveQueryParams: ArchiveQueryParams
@@ -46,7 +48,8 @@ case class ArchiveForm(title: String, author: String, publishTime: java.util.Dat
       content,
       new Date(System.currentTimeMillis()),
       category,
-      tag
+      tag,
+      null
     )
   }
 }

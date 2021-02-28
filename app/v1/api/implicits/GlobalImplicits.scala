@@ -80,7 +80,8 @@ object ArchiveResultSet {
       resultSet.getString(content),
       new Date(resultSet.getTimestamp(createTime).getTime),
       category,
-      tag
+      tag,
+      resultSet.getString(catalog)
     )
   }
 
