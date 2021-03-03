@@ -71,4 +71,9 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       .timeline(params)
 
   }
+
+  def searchArchive(keyword: String): Future[List[Archive]] = {
+    dao.archiveRepository
+      .search(keyword)
+  }
 }

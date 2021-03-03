@@ -12,7 +12,6 @@ import v1.api.implicits.ConnectionHelper._
 import v1.api.implicits.ResultSetHelper._
 import v1.api.page.Page
 
-import java.text.SimpleDateFormat
 import scala.concurrent.Future
 
 @Singleton
@@ -159,7 +158,6 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
 
   override def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = Future {
     database.withConnection(conn => {
-      val sdf = new SimpleDateFormat("yyyy/MM/dd")
       val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
         .executeQuery()
         .getRowCount
@@ -176,6 +174,21 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
       Page(items, params.page, params.limit, total, countTotalPage(total, params.limit))
     })
   }
+
+  override def search(key: String): Future[List[Archive]] = Future {
+    database.withConnection(conn => {
+      val lowerKey = key.toLowerCase
+      val result = conn.prepareStatement(searchSql)
+        .setParams(lowerKey, lowerKey, lowerKey)
+        .executeQuery()
+        .toLazyList
+        .map(x => {
+          Archive(SerialNumber(x.getInt("id")), x.getString("title"), null, null, null, null, null, null, null)
+        })
+        .toList
+      result
+    })
+  }
 }
 
 trait ArchiveRepository {
@@ -183,7 +196,8 @@ trait ArchiveRepository {
 
   def selectById(id: Int): Future[Option[FocusArchive]]
 
-  //def search(key: String): Future[Option[List[Archive]]]
+  def search(key: String): Future[List[Archive]]
+
   def deleteById(id: Int): Future[ResponseMessage]
 
   def insertOne(archive: Archive): Future[Option[Int]]

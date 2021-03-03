@@ -98,4 +98,16 @@ class ArchiveController @Inject()(acc: ArchiveControllerComponents)(implicit ec:
             Ok(Json.toJson(result))
         }
   }
+
+  def searchArchive(keyword: String): Action[AnyContent] = ArchiveAction.async {
+    implicit request =>
+      if (keyword.isEmpty) {
+        BadRequest("Keyword param required not empty.")
+      }
+      ArchiveHandler.searchArchive(keyword)
+        .map {
+          result =>
+            Ok(Json.toJson(result))
+        }
+  }
 }

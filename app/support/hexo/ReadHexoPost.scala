@@ -3,9 +3,10 @@ package support.hexo
 import akka.actor.ActorSystem
 import com.google.inject.{Inject, Singleton}
 import com.vladsch.flexmark.html.HtmlRenderer
+import com.vladsch.flexmark.parser.core.IndentedCodeBlockParser
 import com.vladsch.flexmark.parser.{Parser, PegdownExtensions}
 import com.vladsch.flexmark.profile.pegdown.PegdownOptionsAdapter
-import com.vladsch.flexmark.util.data.{DataKey, MutableDataSet}
+import com.vladsch.flexmark.util.data.{DataHolder, DataKey, MutableDataSet}
 import play.api.Logger
 import util.CatalogUtil
 import v1.api.cont.DefaultValues._
@@ -16,6 +17,7 @@ import v1.api.handler.ArchiveHandler
 import java.io.File
 import java.sql.Date
 import java.text.SimpleDateFormat
+import java.util
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.io.Source
@@ -127,11 +129,16 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
     val options = new MutableDataSet()
     val allOptions = PegdownOptionsAdapter.flexmarkOptions(PegdownExtensions.ALL).toMutable
     options.setAll(allOptions)
+    val map: util.HashMap[String, String] = new util.HashMap[String, String]()
+    map.put("mysql", "language-sql")
+    map.put("sql", "language-sql")
     options.set(HtmlRenderer.SOFT_BREAK, "<br />\n")
     options.set(new DataKey[Boolean]("GENERATE_HEADER_ID", true), true)
     options.set(new DataKey[Boolean]("RENDER_HEADER_ID", true), true)
+    options.set(HtmlRenderer.FENCED_CODE_LANGUAGE_CLASS_MAP, map)
     val parser = Parser.builder(options).build()
     val htmlRender = HtmlRenderer.builder(options).build()
+    println("options : " + options)
     val mdDoc = parser.parse(mdContent)
     val mdHtml = htmlRender.render(mdDoc)
     val tocHtml = CatalogUtil.parseHtml2Catalog(mdHtml, 3)
@@ -146,4 +153,8 @@ class MyMdRead2BaseTask @Inject()(actorSystem: ActorSystem, mdReader: MdReader)(
 
 trait MdReader extends Runnable {
   def readMd(): Unit
+}
+
+class CodeHtml(a: DataHolder) extends IndentedCodeBlockParser(a) {
+
 }

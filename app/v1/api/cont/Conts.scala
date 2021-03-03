@@ -140,5 +140,21 @@ object ArchiveSql {
      where T.TAG=?
      group by T.ID
      """
+  val searchSql =
+    """
+         select ARCHIVE.*,
+               GROUP_CONCAT(DISTINCT CONCAT(C.ID, '#', C.CATEGORY)) as category,
+                GROUP_CONCAT(DISTINCT CONCAT(T.ID, '#', T.TAG))      as tag
+         from ARCHIVE
+                  left join ARCHIVE_CATEGORY AC on ARCHIVE.ID = AC.ARCHIVE_ID
+                  left join ARCHIVE_TAG AT on ARCHIVE.ID = AT.ARCHIVE_ID
+                  left join CATEGORY C on AC.CATEGORY_ID = C.ID
+                  left join TAG T on T.ID = AT.TAG_ID
+         where LOWER(ARCHIVE.TITLE ) like  CONCAT( '%',?,'%')
+            OR LOWER(C.CATEGORY) = ?
+            OR LOWER( T.TAG)  = ?
+         group by ARCHIVE.ID
+         order by ARCHIVE.publishTime DESC
+         """
 }
 

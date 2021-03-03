@@ -27,5 +27,7 @@ class ArchiveRouter @Inject()(ac: ArchiveController) extends SimpleRouter {
       ac.timeline
     case GET(p"/$id") =>
       ac.findById(Integer.parseInt(id))
+    case GET(p"/search/$keyword") =>
+      ac.searchArchive(keyword)
   }
 }
