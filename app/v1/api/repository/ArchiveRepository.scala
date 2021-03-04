@@ -80,7 +80,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  override def list(params: ArchiveQueryParams): Future[Page[Archive]] = Future {
+  override def list(params: PostRequestParams): Future[Page[Archive]] = Future {
     database.withConnection(conn => {
       val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
         .executeQuery()
@@ -131,6 +131,10 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
+  def countTotalPage(total: Long, limit: Int): Int = {
+    (total.toInt / limit) + (if (total.toInt % limit == 0) 0 else 1)
+  }
+
   override def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
     database.withConnection {
       conn =>
@@ -152,11 +156,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  def countTotalPage(total: Long, limit: Int): Int = {
-    (total.toInt / limit) + (if (total.toInt % limit == 0) 0 else 1)
-  }
-
-  override def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = Future {
+  override def timeline(params: PostRequestParams): Future[Page[Timeline]] = Future {
     database.withConnection(conn => {
       val total: Long = conn.prepareStatement("select count(*) from ARCHIVE")
         .executeQuery()
@@ -192,7 +192,7 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
 }
 
 trait ArchiveRepository {
-  def list(params: ArchiveQueryParams): Future[Page[Archive]]
+  def list(params: PostRequestParams): Future[Page[Archive]]
 
   def selectById(id: Int): Future[Option[FocusArchive]]
 
@@ -206,5 +206,5 @@ trait ArchiveRepository {
 
   def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]]
 
-  def timeline(params: ArchiveQueryParams): Future[Page[Timeline]]
+  def timeline(params: PostRequestParams): Future[Page[Timeline]]
 }

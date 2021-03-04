@@ -4,13 +4,13 @@ import com.google.inject.Inject
 import play.api.http.{FileMimeTypes, HttpVerbs}
 import play.api.i18n.{Langs, MessagesApi}
 import play.api.mvc._
-import v1.api.entity.{ArchiveQueryHandler, ArchiveQueryParams}
+import v1.api.entity.{ArchiveQueryHandler, PostRequestParams}
 import v1.api.handler.ArchiveHandler
 import v1.api.log.RequestLogMarker
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ArchiveRequest[A] @Inject()(request: Request[A], val messagesApi: MessagesApi, val archiveQueryParams: ArchiveQueryParams) extends WrappedRequest(request)
+class ArchiveRequest[A] @Inject()(request: Request[A], val messagesApi: MessagesApi, val archiveQueryParams: PostRequestParams) extends WrappedRequest(request)
   with PreferredMessagesProvider with ArchiveQueryHandler
 
 class ArchiveActionBuilder @Inject()(playBodyParsers: PlayBodyParsers, messagesApi: MessagesApi)(implicit val executionContext: ExecutionContext) extends

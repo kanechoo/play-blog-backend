@@ -5,7 +5,6 @@ import v1.api.cont.Entities.ArchiveField._
 import v1.api.cont.Entities.CategoryField._
 import v1.api.cont.Entities.CommonField._
 import v1.api.cont.Entities.TagField._
-import v1.api.cont.Page._
 import v1.api.entity._
 
 import java.sql.{Date, PreparedStatement, ResultSet, Timestamp}
@@ -171,20 +170,20 @@ object PreparedStatementPlaceHolder {
 object RequestHandler {
 
   implicit class BindRequest(request: RequestHeader) {
-    def bindRequestQueryString: ArchiveQueryParams = {
-      var limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some("5")).head))
+    def bindRequestQueryString: PostRequestParams = {
+      val maxItemSize = if (request.uri.indexOf("/timeline") > 0) 8 else 3
+      val limit = Math.min(maxItemSize, Integer.parseInt(request.getQueryString("size").orElse(Some(String.valueOf(maxItemSize))).head))
       val offset = (Math.max(1, Integer.parseInt(request.getQueryString("page").orElse(Some("1")).head)) - 1) * limit
       val order = request.getQueryString("order")
       val page = (offset / limit) + 1
       var category: Option[String] = None
       var tag: Option[String] = None
-      val c = "/category/.+".r.findAllIn(request.uri)
+      val c = "/category/.+".r.findFirstIn(request.uri)
         .iterator.nextOption()
       if (c.nonEmpty) category = Some(request.uri.drop("/category/".length))
-      val t = "/tag/.+".r.findAllIn(request.uri).iterator.nextOption()
+      val t = "/tag/.+".r.findFirstIn(request.uri).iterator.nextOption()
       if (t.nonEmpty) tag = Some(request.uri.drop("/tag/".length))
-      if (request.uri.indexOf("timeline") > 0) limit = 8
-      ArchiveQueryParams(offset, page, limit, category, tag, order)
+      PostRequestParams(offset, page, limit, category, tag, order)
     }
 
   }

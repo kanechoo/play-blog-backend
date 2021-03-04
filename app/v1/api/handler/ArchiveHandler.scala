@@ -44,7 +44,7 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       }
   }
 
-  def selectArchive(params: ArchiveQueryParams): Future[Page[Archive]] = {
+  def selectArchive(params: PostRequestParams): Future[Page[Archive]] = {
     dao.archiveRepository.list(params).map {
       result =>
         result
@@ -66,7 +66,7 @@ class ArchiveHandler @Inject()(dao: Repositories)(implicit ec: ExecutionContext)
       .deleteById(postId)
   }
 
-  def timeline(params: ArchiveQueryParams): Future[Page[Timeline]] = {
+  def timeline(params: PostRequestParams): Future[Page[Timeline]] = {
     dao.archiveRepository
       .timeline(params)
 

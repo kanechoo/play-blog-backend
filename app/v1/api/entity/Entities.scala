@@ -33,10 +33,10 @@ case class Account(serialNumber: SerialNumber, username: String, password: Strin
 case class CatalogMeta(depth: Int, aTag: String)
 
 trait ArchiveQueryHandler {
-  def archiveQueryParams: ArchiveQueryParams
+  def archiveQueryParams: PostRequestParams
 }
 
-case class ArchiveQueryParams(offset: Int, page: Int, limit: Int, category: Option[String], tag: Option[String], order: Option[String])
+case class PostRequestParams(offset: Int, page: Int, limit: Int, category: Option[String], tag: Option[String], order: Option[String])
 
 case class ArchiveForm(title: String, author: String, publishTime: java.util.Date, content: String, category: Seq[Category], tag: Seq[Tag]) {
   def getArchiveFormData: Archive = {

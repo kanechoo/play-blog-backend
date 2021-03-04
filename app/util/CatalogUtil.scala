@@ -54,22 +54,6 @@ object CatalogUtil {
     s"<ul>$result</ul>"
   }
 
-  private def getMatchRegex: Regex = {
-    s"<h[1-6].*?>.+?</h[1-6]>".r
-  }
-
-  private def judgeDepth(header: String): Int = {
-    "</h[1-6]>".r.findAllIn(header)
-      .map {
-        s =>
-          s.replaceAll("</h|>", "")
-      }
-      .toList
-      .headOption
-      .getOrElse("1")
-      .toInt
-  }
-
   private def combine(list: List[String]): String = {
     var result = ""
     for (index <- list.indices) {
@@ -95,6 +79,22 @@ object CatalogUtil {
           result = result.replace(h, newHeader)
       }
     result
+  }
+
+  private def getMatchRegex: Regex = {
+    s"<h[1-6].*?>.+?</h[1-6]>".r
+  }
+
+  private def judgeDepth(header: String): Int = {
+    "</h[1-6]>".r.findAllIn(header)
+      .map {
+        s =>
+          s.replaceAll("</h|>", "")
+      }
+      .toList
+      .headOption
+      .getOrElse("1")
+      .toInt
   }
 
   def getInnerTagText(header: String): String = {
