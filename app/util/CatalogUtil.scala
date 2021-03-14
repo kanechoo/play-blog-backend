@@ -66,21 +66,6 @@ object CatalogUtil {
     result
   }
 
-  def renderHeaderId2RandomUUID(html: String): String = {
-    val regex = getMatchRegex
-    var result = html
-    regex.findAllIn(html)
-      .foreach {
-        h =>
-          val uid = UUID.randomUUID().toString
-          val depth = judgeDepth(h)
-          val innerTagText = getInnerTagText(h)
-          val newHeader = s"<h$depth id='${uid}'><a href='#${uid}'>${innerTagText}</a></h$depth>"
-          result = result.replace(h, newHeader)
-      }
-    result
-  }
-
   private def getMatchRegex: Regex = {
     s"<h[1-6].*?>.+?</h[1-6]>".r
   }
@@ -95,6 +80,21 @@ object CatalogUtil {
       .headOption
       .getOrElse("1")
       .toInt
+  }
+
+  def renderHeaderId2RandomUUID(html: String): String = {
+    val regex = getMatchRegex
+    var result = html
+    regex.findAllIn(html)
+      .foreach {
+        h =>
+          val uid = UUID.randomUUID().toString
+          val depth = judgeDepth(h)
+          val innerTagText = getInnerTagText(h)
+          val newHeader = s"<h$depth id='${uid}'><a href='#${uid}'>${innerTagText}</a></h$depth>"
+          result = result.replace(h, newHeader)
+      }
+    result
   }
 
   def getInnerTagText(header: String): String = {
