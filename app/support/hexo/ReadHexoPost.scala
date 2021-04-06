@@ -67,7 +67,7 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
               }.toSeq
           }
           val title = header.getOrElse("title", tuple._1)
-          val author = header.getOrElse("author", "konc")
+          val author = header.getOrElse("author", "konchoo")
           log.debug("title : " + title)
           log.debug("author : " + author)
           log.debug("content : " + s._2)
@@ -138,7 +138,6 @@ class MdReaderImpl @Inject()(archiveHandler: ArchiveHandler)(implicit executionC
     options.set(HtmlRenderer.FENCED_CODE_LANGUAGE_CLASS_MAP, map)
     val parser = Parser.builder(options).build()
     val htmlRender = HtmlRenderer.builder(options).build()
-    println("options : " + options)
     val mdDoc = parser.parse(mdContent)
     val mdHtml = htmlRender.render(mdDoc)
     val tocHtml = CatalogUtil.parseHtml2Catalog(mdHtml, 3)

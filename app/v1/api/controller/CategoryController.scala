@@ -13,7 +13,6 @@ class CategoryController @Inject()(cc: ControllerComponents, repository: Categor
                                   (implicit ec: ExecutionContext) extends AbstractController(cc) with JsonWrites {
   def findCategory: Action[AnyContent] = Action.async {
     implicit request =>
-      println("category query session : " + request.session)
       repository.findAll.map {
         result =>
           Ok(Json.toJson(result))

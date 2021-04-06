@@ -51,12 +51,12 @@
         <appender-ref ref="STDOUT"/>
     </appender>
 
-    <logger name="play" level="TRACE"/>
-    <logger name="application" level="DEBUG"/>
-    <logger name="v1.api" level="TRACE"/>
-    <logger name="akka" level="trace"/>
-    <logger name="org.jdbcdslog.ConnectionLogger" level="trace"/> <!-- Won' log connections -->
-    <logger name="org.jdbcdslog.StatementLogger" level="trace"/> <!-- Will log all statements -->
+    <logger name="play" level="INFO"/>
+    <logger name="application" level="INFO"/>
+    <logger name="v1.api" level="off"/>
+    <logger name="akka" level="INFO"/>
+    <logger name="org.jdbcdslog.ConnectionLogger" level="off"/> <!-- Won' log connections -->
+    <logger name="org.jdbcdslog.StatementLogger" level="off"/> <!-- Will log all statements -->
     <logger name="org.jdbcdslog.ResultSetLogger" level="off"/> <!-- Won' log result sets -->
 
     <root level="WARN">
