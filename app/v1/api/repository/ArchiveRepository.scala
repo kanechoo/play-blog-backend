@@ -131,10 +131,6 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
     }
   }
 
-  def countTotalPage(total: Long, limit: Int): Int = {
-    (total.toInt / limit) + (if (total.toInt % limit == 0) 0 else 1)
-  }
-
   override def selectByTag(tagName: String)(implicit request: ArchiveRequest[AnyContent]): Future[Page[Archive]] = Future {
     database.withConnection {
       conn =>
@@ -154,6 +150,10 @@ class ArchiveRepositoryImpl @Inject()(@NamedDatabase("blog") database: Database)
           .toList
         Page(items, page, limit, total, countTotalPage(total, limit))
     }
+  }
+
+  def countTotalPage(total: Long, limit: Int): Int = {
+    (total.toInt / limit) + (if (total.toInt % limit == 0) 0 else 1)
   }
 
   override def timeline(params: PostRequestParams): Future[Page[Timeline]] = Future {
